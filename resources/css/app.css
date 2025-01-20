@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#reader__scan_region{
+    min-height: 0 !important;
+}
+
+#html5-qrcode-button-camera-start, 
+#html5-qrcode-button-camera-stop,
+#html5-qrcode-button-camera-permission{
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    background-color: green;
+    padding: 10px 20px;
+    border-radius: 25px;
+}
+
+#reader {
+    img, #html5-qrcode-anchor-scan-type-change {
+        display: none !important;
+    }
+
+    border-width: 0 !important;
+}
