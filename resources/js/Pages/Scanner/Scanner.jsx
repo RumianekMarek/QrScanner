@@ -112,7 +112,7 @@ export default function Scanner({ mode }) {
 
     return (
         <>
-           <form ref={qrCodeForm} onSubmit={submiter} className="qr-form" >
+           <form ref={qrCodeForm} onSubmit={submiter} className="qr-form invisible h-0" >
                 <TextInput
                     ref={qrCodeInput}
                     id="qrCode"
@@ -123,6 +123,7 @@ export default function Scanner({ mode }) {
                     autoComplete="off"
                     isFocused="true"
                     onChange={(e) => setData('qrCode', e.target.value)}
+                    disabled={mode === 'camera'}
                     required
                 />
                 <button id="submittt" ref={qrCodeSubmit} type="submit">Submit</button>
