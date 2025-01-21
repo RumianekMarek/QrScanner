@@ -112,7 +112,7 @@ export default function Scanner({ mode }) {
 
     return (
         <>
-           <form ref={qrCodeForm} onSubmit={submiter} className="qr-form invisible h-0" >
+           <form ref={qrCodeForm} onSubmit={submiter} className="qr-form absolute top-[-9999px] h-0" >
                 <TextInput
                     ref={qrCodeInput}
                     id="qrCode"
@@ -142,11 +142,11 @@ export default function Scanner({ mode }) {
             
             {mode === 'device' && 
                 <>
-                    <button onClick={createCsv} className="absolute left-0 bg-green-500 text-white text-2xl color-white ps-4 pe-4 pt-1 pb-1 m-5 rounded"
+                    <button onClick={createCsv} className="absolute top-0 left-0 bg-green-500 text-white text-2xl color-white ps-4 pe-4 pt-1 pb-1 m-5 rounded"
                     >
                         Wyślij Dane
                     </button>
-                    <button onClick={logout} className="absolute right-0 bg-red-500 text-white text-2xl color-white ps-4 pe-4 pt-1 pb-1 m-5 rounded"
+                    <button onClick={logout} className="absolute top-0 right-0 bg-red-500 text-white text-2xl color-white ps-4 pe-4 pt-1 pb-1 m-5 rounded"
                     >
                         Logout
                     </button>

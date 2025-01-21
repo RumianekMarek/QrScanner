@@ -62,19 +62,24 @@ class ScannerController extends Controller
         $event = new QrDataCurl($domain, $entry_id, $qrCode);
         event($event);
 
-        $event->returner = $event->returner ?? new \stdClass();
-        $event->returner->data = $event->returner->data ?? new \stdClass();
-        $event->returner->data->qrCode = $event->returner->data->qrCode ?? $qrCode;
-        $event->returner->status = $event->returner->status ?? false;
+        // $event->returner = $event->returner ?? new \stdClass();
+        // $event->returner->data = $event->returner->data ?? new \stdClass();
+        // $event->returner->data->qrCode = $event->returner->data->qrCode ?? $qrCode;
+        // $event->returner->status = $event->returner->status ?? false;
 
-        $event_data = json_encode($event->returner->data);
+        $data = $event->returner->data ?? new \stdClass();
+        $data->qrCode = $qrCode;
+        $data->status = $event->returner->status ?? false;
+
+        $event_data = json_encode($data);
+        
         $scannerDetails = $user->scanner_data . $event_data . ';; ';
         
         $user->update([
             'scanner_data' => $scannerDetails,
         ]);
 
-        return back()->with('status', $event->returner);
+        return back()->with('status', $data);
     }
 
     public function download($id)
