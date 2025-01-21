@@ -9,6 +9,8 @@ use Inertia\Response;
 use App\Models\UserDetail;
 use App\Models\Fair;
 use App\Events\QrDataCurl;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CsvEmail;
 
 class ScannerController extends Controller
 {
@@ -33,7 +35,6 @@ class ScannerController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {   
-        
         $request->validate ([
             'qrCode' => 'required|string|max:255',
         ]);
@@ -49,8 +50,14 @@ class ScannerController extends Controller
         if (preg_match($pattern, $qrCode, $matches)) {
             $domain_meta = $matches[1] . $matches[2];
             $entry_id = $matches[3];
-        }
-
+        } 
+        // else {
+        //     $flash = new \stdClass();
+        //     $flash->status = false;
+        //     $flash->scan = $qrCode;
+        //     return back()->with('status', $flash);
+        // }
+        
         $domain = Fair::where('qr_details', 'LIKE', '%'. $domain_meta . '%')->get('domain');
         $event = new QrDataCurl($domain, $entry_id, $qrCode);
         event($event);
@@ -74,10 +81,10 @@ class ScannerController extends Controller
     {
         $data = UserDetail::where('user_id', $id)->value('scanner_data');
         $data_array = explode(';;', $data);
-        $csv_data = "id,Email,Telefon,Imie i Nazwisko \n";
-        
+        $csv_data = "id,Email,Telefon,Imie i Nazwisko, ScanedCode \n";
+
         foreach($data_array as $index => $single){
-            if(empty($single)){ continue; }
+            if(trim($single) == ""){ continue; }
             
             $single = json_decode($single);
 
@@ -85,10 +92,27 @@ class ScannerController extends Controller
             $csv_data .= ',' . ($single->email ?? ' ');
             $csv_data .= ',' . ($single->phone ?? ' ');
             $csv_data .= ',' . ($single->name ?? ' ');
+            $csv_data .= ',' . ($single->qrCode ?? ' ');
             $csv_data .= "\n";
         }
 
-        return back()->with('status', $csv_data);
+        return back()->with('status',  $csv_data);
+    }
+
+    public function send(Request $request)
+    {
+        $userEmail = $request->user()->email;
+        $csvData = $request->csvData;
+
+        Mail::send([], [], function ($message) use ($csvData, $userEmail) {
+            $message->to($userEmail)
+                ->subject('Your CSV File') // Temat wiadomości
+                ->html('<p>Hello,</p><p>Please find the attached CSV file.</p>')
+                ->attachData($csvData, 'data.csv', [
+                    'mime' => 'text/csv',
+                ]);
+        });
         
+        return back()->with('status', ['message' => 'E-mail sent successfully.']);
     }
 }

@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/scanner', [ScannerController::class, 'store'])->name('scanner.store');
     Route::get('/scanner/list/{id}', [ScannerController::class, 'list'])->name('scanner.list');
     Route::post('/scanner/{id}/download', [ScannerController::class, 'download'])->name('scanner.download');
+    Route::post('/scanner/send', [ScannerController::class, 'send'])->name('scanner.send');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

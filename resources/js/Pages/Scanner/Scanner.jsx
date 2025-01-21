@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { usePage, useForm } from '@inertiajs/react';
+import { usePage, useForm, router } from '@inertiajs/react';
 import QrScanner from '@/Layouts/QrScanner';
 import CameraAcces from './CameraAcces';
 import DeviceScannerAcces from './DeviceScannerAcces';
@@ -10,18 +10,13 @@ import PrimaryButton from '@/Components/PrimaryButton';
 export default function Scanner({ mode }) {
     const { props } = usePage();
     const { flash } = usePage().props;
-    // const [showflash, setShowflash] = useState(false);
-    // const [flashMessage, setflashMessage] = useState(null);
+    const csvData = usePage().props.flash;
+    const [showflash, setShowflash] = useState(false);
+    const [flashMessage, setflashMessage] = useState(null);
 
     const { data, setData, post, processing, reset} = useForm({
         qrCode: '',
     });
-
-    // const translations = {
-    //     name: "Imię",
-    //     email: "Email",
-    //     phone: "Telefon"
-    // };
 
     const htmlLast3 = (
         <>
@@ -42,39 +37,27 @@ export default function Scanner({ mode }) {
         </>
     )
 
-    // useEffect(() => {
-    //     if (flash){
-    //         console.log(flash.data);
-    //         let flashMessage = '';
-    //         if (flash.status) {
-    //             flashMessage = Object.entries(flash.data).map(([key, value]) => (
-    //                 <p key={key}>
-    //                     {translations[key] || key} = {value}
-    //                 </p>
-    //             ));
-    //         } else {
-    //             flashMessage = Object.entries(flash.data).map(([key, value]) => (
-    //                 <p key={key}>
-    //                     {translations[key] || key} = {value}
-    //                 </p>
-    //             ));
-    //         }
+    useEffect(() => {
+        if (flash && flash.message){
+            let flashMessage = (
+                <p className="text-center">
+                    {flash.message} <br/>
+                    <span>{props.auth.user.email}</span>
+                </p>
+            )
 
-    //         setflashMessage(flashMessage);
-    //         setShowflash(true);
-            
-    //         const timeout = setTimeout(() => {
-    //             closeflash();
-    //         }, 5000);
-    
-    //         return () => clearTimeout(timeout);
-    //     }
-    // }, [flash])
+            setflashMessage(flashMessage);
+            setShowflash(true);
+        }
+        // setTimeout(() => {
+        //     closeflash();
+        // }, 5000)
+    }, [flash])
 
-    // const closeflash = () => {
-    //     setShowflash(null);
-    //     setflashMessage(false);
-    // };
+    const closeflash = () => {
+        setShowflash(null);
+        setflashMessage(false);
+    };
 
     const qrCodeInput = useRef(null);
     const qrCodeForm = useRef(null);
@@ -93,6 +76,22 @@ export default function Scanner({ mode }) {
         e.preventDefault();
         post(route('logout'));
     }
+
+    const createCsv = (e) => {
+        e.preventDefault();
+        post(route('scanner.download', {'id': props.auth.user.id}));
+    }
+
+    const sendCsv = async (csvData) => {
+        router.post(route('scanner.send'), {
+            csvData,
+        })
+    }
+
+    if (typeof csvData === 'string' && csvData.trim() !== '') {
+        sendCsv(csvData);
+    }
+
     useEffect(() => {
         if (data.qrCode && mode === 'camera') {
             qrCodeSubmit.current.click();
@@ -113,7 +112,7 @@ export default function Scanner({ mode }) {
 
     return (
         <>
-           <form ref={qrCodeForm} onSubmit={submiter} className="qr-form invisible h-0" >
+           <form ref={qrCodeForm} onSubmit={submiter} className="qr-form" >
                 <TextInput
                     ref={qrCodeInput}
                     id="qrCode"
@@ -124,7 +123,6 @@ export default function Scanner({ mode }) {
                     autoComplete="off"
                     isFocused="true"
                     onChange={(e) => setData('qrCode', e.target.value)}
-                    disabled={mode === 'camera'}
                     required
                 />
                 <button id="submittt" ref={qrCodeSubmit} type="submit">Submit</button>
@@ -143,16 +141,29 @@ export default function Scanner({ mode }) {
             
             {mode === 'device' && 
                 <>
-                    <button onClick={logout} className="absolute right-0 bg-green-500 text-white text-2xl color-white ps-4 pe-4 pt-1 pb-1 m-5 rounded"
+                    <button onClick={createCsv} className="absolute left-0 bg-green-500 text-white text-2xl color-white ps-4 pe-4 pt-1 pb-1 m-5 rounded"
+                    >
+                        Wyślij Dane
+                    </button>
+                    <button onClick={logout} className="absolute right-0 bg-red-500 text-white text-2xl color-white ps-4 pe-4 pt-1 pb-1 m-5 rounded"
                     >
                         Logout
                     </button>
-                    <div className="text-center mt-10">
+                    <div className="text-center mt-20">
                         {htmlLast3}
                     </div>
                     <DeviceScannerAcces />
                 </>
             }
+
+            {showflash && (
+                <div className="popup-container fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-20">
+                    <div className="popup-content bg-white p-6 rounded shadow-lg w-1/3 flex flex-col items-center min-w-80">
+                        {flashMessage}
+                        <PrimaryButton className="mt-10 bg-red-500 active:bg-red-900" onClick={closeflash}>Close</PrimaryButton>
+                    </div>
+                </div>
+            )}
         </>
     )
 }

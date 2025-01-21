@@ -82,7 +82,7 @@ export default function Login({ status, canResetPassword }) {
             )}
             <div className="text-center mb-10">
                 <PrimaryButton className="ms-4" onClick={openflash}>
-                    Zaloguj się kodem QR
+                    Logowanie do skanera
                 </PrimaryButton>
             </div>
             <form onSubmit={submit}>

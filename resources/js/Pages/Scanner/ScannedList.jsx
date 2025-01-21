@@ -1,13 +1,17 @@
-import { useEffect } from "react";
-import { Head, usePage } from '@inertiajs/react';
+import { useEffect, useState} from "react";
+import { Head, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import NavLink from '@/Components/NavLink';
 import PrimaryButton from '@/Components/PrimaryButton';
 
 export default function DeviceScannerAcces({ scannerData }) {
-    const { csvData } = usePage().props;
+    const { props } = usePage();
+    const { flash } = usePage().props;
+    const csvData = usePage().props.flash;
     const user = usePage().props.auth.user;
     const scannerArray = (scannerData ? scannerData.split(';;') : []) ?? [];
+    const [showflash, setShowflash] = useState(false);
+    const [flashMessage, setflashMessage] = useState(null);
 
     const downloadCsv = async (csvData) => {
         try {
@@ -28,8 +32,36 @@ export default function DeviceScannerAcces({ scannerData }) {
         }
     };
 
+    const sendCsv = async (csvData) => {
+        router.post(route('scanner.send'), {
+            csvData,
+        })
+    }
+
+     useEffect(() => {
+        if (flash && flash.message){
+            let flashMessage = (
+                <p className="text-center">
+                    {flash.message} <br/>
+                    <span className="text-xl">{props.auth.user.email}</span>
+                </p>
+            )
+
+            setflashMessage(flashMessage);
+            setShowflash(true);
+        }
+        setTimeout(() => {
+            closeflash();
+        }, 5000)
+    }, [flash])
+
+    const closeflash = () => {
+        setShowflash(null);
+        setflashMessage(false);
+    };
+
     if (typeof csvData === 'string' && csvData.trim() !== '') {
-        downloadCsv(csvData);
+        sendCsv(csvData);
     }
     return (
         <AuthenticatedLayout
@@ -45,8 +77,10 @@ export default function DeviceScannerAcces({ scannerData }) {
                 <NavLink
                     href={route('scanner.download', { id: user.id })}
                     active={route().current('scanner.download')}
+                    method="post"
+                    className=" bg-green-300 text-xl ps-4 pe-4 pt-1 pb-1 m-5 rounded"
                 >
-                        <PrimaryButton>Pobierz</PrimaryButton>
+                    Pobierz
                 </NavLink>
             </div>
             <div className="m-5">
@@ -80,6 +114,16 @@ export default function DeviceScannerAcces({ scannerData }) {
                     </tbody>
                 </table>
             </div>
+            {showflash && (
+                <div className="popup-container fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-20">
+                    <div className="popup-content bg-white p-6 rounded shadow-lg w-1/3 flex flex-col items-center min-w-80">
+                        {flashMessage}
+                        <PrimaryButton className="mt-10 bg-red-500 active:bg-red-900" onClick={closeflash}>Close</PrimaryButton>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
+        
+
     )
 }
