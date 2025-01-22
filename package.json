@@ -25,6 +25,9 @@
     },
     "dependencies": {
         "html5-qrcode": "^2.3.8",
-        "qrcode.react": "^4.2.0"
+        "install": "^0.13.0",
+        "npm": "^10.9.2",
+        "qrcode.react": "^4.2.0",
+        "react-hid": "^0.1.5"
     }
 }

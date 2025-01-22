@@ -42,15 +42,14 @@ class AuthenticatedSessionController extends Controller
      */
     public function token(Request $request, $token = null): RedirectResponse
     {
-
         if(empty($token)){
-            $login_token = explode('/auth/', $request->targetUrl)[1];
+            $login_token = explode('/auth/', $request->token)[1];
         } else {
             $login_token = $token;
         }
-        
-        $user = User::where('login_token', $login_token)->first();
 
+        $user = User::where('login_token', $login_token)->first();
+        
         if (!$user) {
             return redirect()->route('login')->withErrors(['error' => 'Nieprawidłowy token']);
         }

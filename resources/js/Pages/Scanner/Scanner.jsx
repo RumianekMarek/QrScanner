@@ -122,6 +122,8 @@ export default function Scanner({ mode }) {
                     className="mt-1 block w-full w-4/6"
                     autoComplete="off"
                     isFocused="true"
+                    readOnly
+                    onPaste={(e) => setData('qrCode', e.target.value)}
                     onChange={(e) => setData('qrCode', e.target.value)}
                     disabled={mode === 'camera'}
                     required

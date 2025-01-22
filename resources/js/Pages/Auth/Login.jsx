@@ -4,8 +4,9 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from "react";
+import { useHidWithActionKey } from 'react-hid';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -20,22 +21,26 @@ export default function Login({ status, canResetPassword }) {
 
     const tokenInput = useRef(null);
 
-    const submit = (e) => {
-        e.preventDefault();
-
-        post(route('login'), {
-            onFinish: () => reset('password'),
+    const tokenSubmit = (token) => {
+        console.log(token);
+        router.post(route('post.token'), {
+            token,
         });
     };
 
-    const tokenSubmit = (e) => {
+    const handleKeys = (keys) => {
+        if(showflash){
+            const targetkeys = keys.replace(/undefined/g, '').replace(/Shift/g, '');
+            tokenSubmit(targetkeys);
+        }
+    };
+    
+    useHidWithActionKey('Enter', handleKeys);
+    
+    const submit = (e) => {
         e.preventDefault();
-
-        post(route('post.token'), {
-            onFinish: () => {
-                closeflash();
-                reset('targetUrl');
-            }
+        post(route('login'), {
+            onFinish: () => reset('password'),
         });
     };
 
@@ -152,7 +157,7 @@ export default function Login({ status, canResetPassword }) {
                 <div className="popup-container fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-20">
                     <div className="popup-content bg-white p-6 rounded shadow-lg w-1/3 flex flex-col items-center min-w-80">
                         {flashMessage}
-                        <form onSubmit={tokenSubmit} 
+                        {/* <form onSubmit={tokenSubmit} 
                             className="h-0"
                         >
                             <TextInput
@@ -163,10 +168,11 @@ export default function Login({ status, canResetPassword }) {
                                 value={data.targetUrl}
                                 className="mt-1 block w-full h-0 p-0"
                                 autoComplete="off"
+                                autoCorrect="off"
                                 isFocused={true}
                                 onChange={(e) => setData('targetUrl', e.target.value)}
                             />
-                        </form>
+                        </form> */}
                         <PrimaryButton className="mt-10 bg-red-500 active:bg-red-900" onClick={closeflash}>Close</PrimaryButton>
                     </div>
                 </div>
