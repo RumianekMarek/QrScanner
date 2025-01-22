@@ -4,9 +4,8 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm, router } from '@inertiajs/react';
-import { useEffect, useRef, useState } from "react";
-import { useHidWithActionKey } from 'react-hid';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { useState } from "react";
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -17,67 +16,7 @@ export default function Login({ status, canResetPassword }) {
     });
 
     const [showflash, setShowflash] = useState(false);
-    const [lastkey, setlastkey] = useState(null);
-    const [scannedData, setScannedData] = useState(false);
     const [flashMessage, setflashMessage] = useState(null);
-
-    
-
-    // const handleKeys = (keys) => {
-    //     if(showflash){
-    //         const targetkeys = keys.replace(/undefined/g, '').replace(/Shift/g, '');
-    //         tokenSubmit(targetkeys);
-    //     }
-    // };
-
-    // const handleKeys = (keys) => {
-    //     if (showflash && keys != '') {
-    //         const targetkeys = keys.replace(/undefined/g, '').replace(/Shift/g, '');
-    //         console.log(targetkeys);
-    //         // Możesz zatrzymać dalsze przetwarzanie lub dodać logikę wyświetlania wyniku
-    //         // tokenSubmit(targetkeys);
-    
-    //         // Przykład wyświetlenia wyników jako HTML
-    //         const resultHtml = (
-    //             <>
-    //                 <h4>Zeskanowany kod: {targetkeys}</h4>
-    //                 <p>Token został przesłany pomyślnie!</p>
-    //             </>
-    //         );
-    
-    //         // Przypisz wynik do stanu, aby wyświetlić go w UI
-    //         setflashMessage(resultHtml);
-    //     }
-    // };
-    useEffect(() => {
-        const handleKeys = (event) => {
-            if(showflash && event.code == "Enter"){
-                console.log(data);
-            }
-        };
-
-        if (showflash) {
-            document.addEventListener('keydown', handleKeys);
-        } else {
-            document.removeEventListener('keydown', handleKeys);
-        }
-
-        return () => {
-            document.removeEventListener('paste', handleKeys);
-        };
-    }, [showflash]);
-
-    // useEffect(() => {
-    //     setTimeout(() => {
-    //     }, 200);
-    //     console.log(data.targetUrl);
-    //     // const handleClick = (event) => {
-    //     // };
-    //     // document.addEventListener('click', handleClick);
-    //     // return () => {
-    //     //     document.removeEventListener('click', handleClick);
-    //     // };
-    // }, [data.targetUrl]);
 
     const openflash = () => {
         const flashMessage = (
@@ -90,20 +29,12 @@ export default function Login({ status, canResetPassword }) {
 
         setflashMessage(flashMessage);
         setShowflash(true);
-        console.log(showflash);
     }
     
     const closeflash = () => {
         setShowflash(false);
         setflashMessage(null);
     };
-
-    // useEffect(() => {
-    //     console.log(data.targetUrl);
-    // }, [data.targetUrl])
-
-
-    // useHidWithActionKey('Enter', handleKeys);
 
     const submit = (e) => {
         e.preventDefault();
@@ -114,7 +45,9 @@ export default function Login({ status, canResetPassword }) {
 
     const submitter = (e) => {
         e.preventDefault();
-        post(route('post.token'));
+        post(route('post.token'), {
+            onFinish: () => reset('targetUrl'),
+        });
     };
 
     return (
@@ -204,7 +137,7 @@ export default function Login({ status, canResetPassword }) {
                             type="text"
                             name="targetUrl"
                             value={data.targetUrl}
-                            className="mt-1 block w-full h-0 opacity-0"
+                            className="mt-1 block w-full h-0 opacity-0 pointer-events-none"
                             isFocused={true}
                             autoComplete='off'
                             onChange={(e) => setData('targetUrl', e.target.value)}

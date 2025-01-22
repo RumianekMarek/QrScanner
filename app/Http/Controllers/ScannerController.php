@@ -35,6 +35,7 @@ class ScannerController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {   
+        // dd($request);
         $request->validate ([
             'qrCode' => 'required|string|max:255',
         ]);
@@ -51,21 +52,10 @@ class ScannerController extends Controller
             $domain_meta = $matches[1] . $matches[2];
             $entry_id = $matches[3];
         } 
-        // else {
-        //     $flash = new \stdClass();
-        //     $flash->status = false;
-        //     $flash->scan = $qrCode;
-        //     return back()->with('status', $flash);
-        // }
         
         $domain = Fair::where('qr_details', 'LIKE', '%'. $domain_meta . '%')->get('domain');
         $event = new QrDataCurl($domain, $entry_id, $qrCode);
         event($event);
-
-        // $event->returner = $event->returner ?? new \stdClass();
-        // $event->returner->data = $event->returner->data ?? new \stdClass();
-        // $event->returner->data->qrCode = $event->returner->data->qrCode ?? $qrCode;
-        // $event->returner->status = $event->returner->status ?? false;
 
         $data = $event->returner->data ?? new \stdClass();
         $data->qrCode = $qrCode;

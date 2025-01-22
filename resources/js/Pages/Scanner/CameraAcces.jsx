@@ -1,15 +1,11 @@
 import { useEffect, useRef } from "react";
-import PrimaryButton from '@/Components/PrimaryButton';
 import CameraScan from './CameraScan';
 
 export default function CameraAccess({ scanned }) {
     const videoRef = useRef(null);
-    const startButton = useRef(null);
-    const stopButton = useRef(null);
 
     const handleScan = (decodedText) => {
         scanned(decodedText);
-        console.log("QR Code Scanned:", decodedText);
     };
 
     useEffect(() => {

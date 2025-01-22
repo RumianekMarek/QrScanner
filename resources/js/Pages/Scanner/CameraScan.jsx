@@ -2,6 +2,8 @@ import { Html5QrcodeScanner } from "html5-qrcode";
 import { useEffect } from "react";
 
 export default function CameraScan({ onScan }) {
+    let scanCompleted = false;
+
     useEffect(() => {
         const qrCameraScan = new Html5QrcodeScanner("reader", {
             fps: 2,
@@ -12,12 +14,15 @@ export default function CameraScan({ onScan }) {
 
         qrCameraScan.render(
             (decodedText, decodedResult) => {
-                if (onScan) onScan(decodedText);
+                if (!scanCompleted) { 
+                    scanCompleted = true; 
+                    if (onScan) onScan(decodedText);
+                }
             },
             (error) => {
             }
         );
-
+        
         return () => {
             qrCameraScan.clear();
         };
