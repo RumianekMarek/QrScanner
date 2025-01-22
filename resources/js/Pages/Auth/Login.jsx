@@ -17,14 +17,11 @@ export default function Login({ status, canResetPassword }) {
     });
 
     const [showflash, setShowflash] = useState(false);
+    const [lastkey, setlastkey] = useState(null);
     const [scannedData, setScannedData] = useState(false);
     const [flashMessage, setflashMessage] = useState(null);
 
-    const tokenSubmit = (token) => {
-        router.post(route('post.token'), {
-            token,
-        });
-    };
+    
 
     // const handleKeys = (keys) => {
     //     if(showflash){
@@ -32,7 +29,56 @@ export default function Login({ status, canResetPassword }) {
     //         tokenSubmit(targetkeys);
     //     }
     // };
-     
+
+    // const handleKeys = (keys) => {
+    //     if (showflash && keys != '') {
+    //         const targetkeys = keys.replace(/undefined/g, '').replace(/Shift/g, '');
+    //         console.log(targetkeys);
+    //         // Możesz zatrzymać dalsze przetwarzanie lub dodać logikę wyświetlania wyniku
+    //         // tokenSubmit(targetkeys);
+    
+    //         // Przykład wyświetlenia wyników jako HTML
+    //         const resultHtml = (
+    //             <>
+    //                 <h4>Zeskanowany kod: {targetkeys}</h4>
+    //                 <p>Token został przesłany pomyślnie!</p>
+    //             </>
+    //         );
+    
+    //         // Przypisz wynik do stanu, aby wyświetlić go w UI
+    //         setflashMessage(resultHtml);
+    //     }
+    // };
+    useEffect(() => {
+        const handleKeys = (event) => {
+            if(showflash && event.code == "Enter"){
+                console.log(data);
+            }
+        };
+
+        if (showflash) {
+            document.addEventListener('keydown', handleKeys);
+        } else {
+            document.removeEventListener('keydown', handleKeys);
+        }
+
+        return () => {
+            document.removeEventListener('paste', handleKeys);
+        };
+    }, [showflash]);
+
+    // useEffect(() => {
+    //     setTimeout(() => {
+    //     }, 200);
+    //     console.log(data.targetUrl);
+    //     // const handleClick = (event) => {
+    //     // };
+    //     // document.addEventListener('click', handleClick);
+    //     // return () => {
+    //     //     document.removeEventListener('click', handleClick);
+    //     // };
+    // }, [data.targetUrl]);
+
     const openflash = () => {
         const flashMessage = (
             <>
@@ -41,57 +87,34 @@ export default function Login({ status, canResetPassword }) {
                 </h4>
             </>
         );
-        // setflashMessage(flashMessage);
+
+        setflashMessage(flashMessage);
         setShowflash(true);
-    };
-
-    const handleKeys = (keys) => {
-        if (showflash) {
-            setScannedData(keys);
-            const targetkeys = keys.replace(/undefined/g, '').replace(/Shift/g, '');
-            console.log(targetkeys);
-            // Możesz zatrzymać dalsze przetwarzanie lub dodać logikę wyświetlania wyniku
-            // tokenSubmit(targetkeys);
+        console.log(showflash);
+    }
     
-            // Przykład wyświetlenia wyników jako HTML
-            const resultHtml = (
-                <>
-                    <h4>Zeskanowany kod: {targetkeys}</h4>
-                    <p>Token został przesłany pomyślnie!</p>
-                </>
-            );
-    
-            // Przypisz wynik do stanu, aby wyświetlić go w UI
-            setflashMessage(resultHtml);
-        }
-    };
-
     const closeflash = () => {
         setShowflash(false);
         setflashMessage(null);
     };
 
     // useEffect(() => {
-    //     const handlePaste = (event) => {
-    //         const pastedData = event.clipboardData.getData('text');
-    //         tokenSubmit(pastedData);
-    //     };
-    
-    //     if (showflash) {
-    //         document.addEventListener('paste', handlePaste);
-    //     } else {
-    //         document.removeEventListener('paste', handlePaste);
-    //     }
-    // }, [showflash]);
-    
+    //     console.log(data.targetUrl);
+    // }, [data.targetUrl])
 
-    useHidWithActionKey('Enter', handleKeys);
-    
+
+    // useHidWithActionKey('Enter', handleKeys);
+
     const submit = (e) => {
         e.preventDefault();
         post(route('login'), {
             onFinish: () => reset('password'),
         });
+    };
+
+    const submitter = (e) => {
+        e.preventDefault();
+        post(route('post.token'));
     };
 
     return (
@@ -174,8 +197,20 @@ export default function Login({ status, canResetPassword }) {
             {showflash && (
                 <div className="popup-container fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-20">
                     <div className="popup-content bg-white p-6 rounded shadow-lg w-1/3 flex flex-col items-center min-w-80">
-                        {flashMessage}
-                        {scannedData}
+                    {flashMessage}
+                    <form onSubmit={submitter}>
+                        <TextInput
+                            id="targetUrl"
+                            type="text"
+                            name="targetUrl"
+                            value={data.targetUrl}
+                            className="mt-1 block w-full h-0 opacity-0"
+                            isFocused={true}
+                            autoComplete='off'
+                            onChange={(e) => setData('targetUrl', e.target.value)}
+                        />
+                    </form>
+                        
                         <PrimaryButton className="mt-10 bg-red-500 active:bg-red-900" onClick={closeflash}>Close</PrimaryButton>
                     </div>
                 </div>
