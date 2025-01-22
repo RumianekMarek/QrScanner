@@ -25,12 +25,12 @@ export default function Login({ status, canResetPassword }) {
         });
     };
 
-    const handleKeys = (keys) => {
-        if(showflash){
-            const targetkeys = keys.replace(/undefined/g, '').replace(/Shift/g, '');
-            tokenSubmit(targetkeys);
-        }
-    };
+    // const handleKeys = (keys) => {
+    //     if(showflash){
+    //         const targetkeys = keys.replace(/undefined/g, '').replace(/Shift/g, '');
+    //         tokenSubmit(targetkeys);
+    //     }
+    // };
      
     const openflash = () => {
         const flashMessage = (
@@ -40,28 +40,47 @@ export default function Login({ status, canResetPassword }) {
                 </h4>
             </>
         );
-
-        setflashMessage(flashMessage);
+        // setflashMessage(flashMessage);
         setShowflash(true);
-    }
+    };
+
+    const handleKeys = (keys) => {
+        if (showflash) {
+            const targetkeys = keys.replace(/undefined/g, '').replace(/Shift/g, '');
+            console.log(targetkeys)
+            // Możesz zatrzymać dalsze przetwarzanie lub dodać logikę wyświetlania wyniku
+            // tokenSubmit(targetkeys);
+    
+            // Przykład wyświetlenia wyników jako HTML
+            const resultHtml = (
+                <>
+                    <h4>Zeskanowany kod: {targetkeys}</h4>
+                    <p>Token został przesłany pomyślnie!</p>
+                </>
+            );
+    
+            // Przypisz wynik do stanu, aby wyświetlić go w UI
+            setflashMessage(resultHtml);
+        }
+    };
 
     const closeflash = () => {
         setShowflash(false);
         setflashMessage(null);
     };
 
-    useEffect(() => {
-        const handlePaste = (event) => {
-            const pastedData = event.clipboardData.getData('text');
-            tokenSubmit(pastedData);
-        };
+    // useEffect(() => {
+    //     const handlePaste = (event) => {
+    //         const pastedData = event.clipboardData.getData('text');
+    //         tokenSubmit(pastedData);
+    //     };
     
-        if (showflash) {
-            document.addEventListener('paste', handlePaste);
-        } else {
-            document.removeEventListener('paste', handlePaste);
-        }
-    }, [showflash]);
+    //     if (showflash) {
+    //         document.addEventListener('paste', handlePaste);
+    //     } else {
+    //         document.removeEventListener('paste', handlePaste);
+    //     }
+    // }, [showflash]);
     
 
     useHidWithActionKey('Enter', handleKeys);
@@ -72,7 +91,7 @@ export default function Login({ status, canResetPassword }) {
             onFinish: () => reset('password'),
         });
     };
-    
+
     return (
         <GuestLayout>
             <Head title="Log in" />
