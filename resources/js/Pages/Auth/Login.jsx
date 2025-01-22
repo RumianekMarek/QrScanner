@@ -17,6 +17,7 @@ export default function Login({ status, canResetPassword }) {
     });
 
     const [showflash, setShowflash] = useState(false);
+    const [scannedData, setScannedData] = useState(false);
     const [flashMessage, setflashMessage] = useState(null);
 
     const tokenSubmit = (token) => {
@@ -46,8 +47,9 @@ export default function Login({ status, canResetPassword }) {
 
     const handleKeys = (keys) => {
         if (showflash) {
+            setScannedData(keys);
             const targetkeys = keys.replace(/undefined/g, '').replace(/Shift/g, '');
-            console.log(targetkeys)
+            console.log(targetkeys);
             // Możesz zatrzymać dalsze przetwarzanie lub dodać logikę wyświetlania wyniku
             // tokenSubmit(targetkeys);
     
@@ -173,6 +175,7 @@ export default function Login({ status, canResetPassword }) {
                 <div className="popup-container fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-20">
                     <div className="popup-content bg-white p-6 rounded shadow-lg w-1/3 flex flex-col items-center min-w-80">
                         {flashMessage}
+                        {scannedData}
                         <PrimaryButton className="mt-10 bg-red-500 active:bg-red-900" onClick={closeflash}>Close</PrimaryButton>
                     </div>
                 </div>
