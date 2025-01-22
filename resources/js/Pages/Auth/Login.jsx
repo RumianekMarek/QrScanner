@@ -19,10 +19,7 @@ export default function Login({ status, canResetPassword }) {
     const [showflash, setShowflash] = useState(false);
     const [flashMessage, setflashMessage] = useState(null);
 
-    const tokenInput = useRef(null);
-
     const tokenSubmit = (token) => {
-        console.log(token);
         router.post(route('post.token'), {
             token,
         });
@@ -34,30 +31,7 @@ export default function Login({ status, canResetPassword }) {
             tokenSubmit(targetkeys);
         }
     };
-    
-    useHidWithActionKey('Enter', handleKeys);
-    
-    const submit = (e) => {
-        e.preventDefault();
-        post(route('login'), {
-            onFinish: () => reset('password'),
-        });
-    };
-
-    useEffect(() => {
-        if(tokenInput){
-            const handleClick = (event) => {
-                setTimeout(() => {
-                    tokenInput.current?.focus();
-                }, 100);
-            };
-            document.addEventListener('click', handleClick);
-            return () => {
-                document.removeEventListener('click', handleClick);
-            };
-        }
-    }, [tokenInput]);
-
+     
     const openflash = () => {
         const flashMessage = (
             <>
@@ -72,10 +46,33 @@ export default function Login({ status, canResetPassword }) {
     }
 
     const closeflash = () => {
-        setShowflash(null);
-        setflashMessage(false);
+        setShowflash(false);
+        setflashMessage(null);
     };
 
+    useEffect(() => {
+        const handlePaste = (event) => {
+            const pastedData = event.clipboardData.getData('text');
+            tokenSubmit(pastedData);
+        };
+    
+        if (showflash) {
+            document.addEventListener('paste', handlePaste);
+        } else {
+            document.removeEventListener('paste', handlePaste);
+        }
+    }, [showflash]);
+    
+
+    useHidWithActionKey('Enter', handleKeys);
+    
+    const submit = (e) => {
+        e.preventDefault();
+        post(route('login'), {
+            onFinish: () => reset('password'),
+        });
+    };
+    
     return (
         <GuestLayout>
             <Head title="Log in" />
@@ -157,22 +154,6 @@ export default function Login({ status, canResetPassword }) {
                 <div className="popup-container fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-20">
                     <div className="popup-content bg-white p-6 rounded shadow-lg w-1/3 flex flex-col items-center min-w-80">
                         {flashMessage}
-                        {/* <form onSubmit={tokenSubmit} 
-                            className="h-0"
-                        >
-                            <TextInput
-                                ref={tokenInput} 
-                                id="targetUrl"
-                                type="text"
-                                name="targetUrl"
-                                value={data.targetUrl}
-                                className="mt-1 block w-full h-0 p-0"
-                                autoComplete="off"
-                                autoCorrect="off"
-                                isFocused={true}
-                                onChange={(e) => setData('targetUrl', e.target.value)}
-                            />
-                        </form> */}
                         <PrimaryButton className="mt-10 bg-red-500 active:bg-red-900" onClick={closeflash}>Close</PrimaryButton>
                     </div>
                 </div>

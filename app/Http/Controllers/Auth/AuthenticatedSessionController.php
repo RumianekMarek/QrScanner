@@ -49,7 +49,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         $user = User::where('login_token', $login_token)->first();
-        
+
         if (!$user) {
             return redirect()->route('login')->withErrors(['error' => 'Nieprawidłowy token']);
         }
@@ -61,7 +61,6 @@ class AuthenticatedSessionController extends Controller
         return redirect()->route('scanner.create', [
             'mode' => 'device',
         ]);
-
     }
 
     /**
