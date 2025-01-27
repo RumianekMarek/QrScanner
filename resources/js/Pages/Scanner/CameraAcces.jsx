@@ -20,7 +20,7 @@ export default function CameraAccess({ scanned }) {
         setTimeout(() => {
             isProcessingRef.current = false;
         }, 1000);
-        
+        console.log(decodedText);
         scanned(decodedText);
     };
 

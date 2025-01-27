@@ -4,27 +4,39 @@ import { useEffect, useRef } from "react";
 export default function CameraScan({ onScan }) {
     const scannerRef = useRef(null);
     const containerRef = useRef(null);
+    let uniqueQR = '';
 
     useEffect(() => {
-        if (!scannerRef.current && containerRef.current) {
-            // Create scanner instance
-            scannerRef.current = new Html5Qrcode("qr-reader");
-            // Start scanning
-            scannerRef.current.start(
-                { facingMode: "environment" },
-                {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
-                },
-                (decodedText) => {
-                    if (onScan) onScan(decodedText);
-                },
-                () => {} // Ignore errors
-            ).catch(console.error);
-        }
+        const timer = setTimeout(() => {
+            if (!scannerRef.current && containerRef.current) {
+                // Tworzenie instancji skanera
+                scannerRef.current = new Html5Qrcode("qr-reader");
 
-        // Cleanup
+                // Rozpoczęcie skanowania
+                scannerRef.current.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10, // Ilość klatek na sekundę
+                        qrbox: { width: 250, height: 250 },
+                    },
+                    (decodedText) => {
+                        console.log("Previous QR:", uniqueQR);
+                        console.log("Current QR:", decodedText);
+    
+                        if (onScan && decodedText !== uniqueQR) {
+                            console.log('tak');
+                            uniqueQR = decodedText; // Zapisz aktualny tekst
+                            onScan(decodedText); // Wywołaj funkcję `onScan`
+                        }
+                    },
+                    () => {}
+                ).catch(console.error);
+            }
+        }, 2000); // Opóźnienie 2 sekundy
+
+        // Czyszczenie przy odmontowaniu komponentu
         return () => {
+            clearTimeout(timer); // Anulowanie timera, jeśli komponent zostanie odmontowany
             if (scannerRef.current) {
                 scannerRef.current.stop()
                     .then(() => {
