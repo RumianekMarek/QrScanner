@@ -7,17 +7,34 @@ import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+// Create a singleton root instance
+let root = null;
+
+// Cache for resolved components to prevent double resolution
+const resolvedComponents = new Map();
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) =>
-        resolvePageComponent(
+    resolve: async (name) => {
+        
+        if (resolvedComponents.has(name)) {
+            return resolvedComponents.get(name);
+        }
+
+        const component = await resolvePageComponent(
             `./Pages/${name}.jsx`,
             import.meta.glob('./Pages/**/*.jsx'),
-        ),
+        );
+        
+        resolvedComponents.set(name, component);
+        
+        return component;
+    },
     setup({ el, App, props }) {
-        console.log('[Debug] Inertia props received:', props);
-        const root = createRoot(el);
-
+        if (!root) {
+            root = createRoot(el);
+        }
+        
         root.render(<App {...props} />);
     },
     progress: {

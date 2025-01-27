@@ -1,25 +1,39 @@
-import { Html5QrcodeScanner } from "html5-qrcode";
-import { useEffect, useState } from "react";
-import { usePage } from "@inertiajs/react";
+import { Html5Qrcode } from "html5-qrcode";
+import { useEffect, useRef } from "react";
 
 export default function CameraScan({ onScan }) {
-    useEffect(() => {
-        const qrCameraScan = new Html5QrcodeScanner("reader", {
-            fps: 0.5,
-            qrbox: { width: 250, height: 250 },
-            videoConstraints: { facingMode: "environment" },
-        });
+    const scannerRef = useRef(null);
+    const containerRef = useRef(null);
 
-        qrCameraScan.render(
-            (decodedText) => {
-                if (onScan) onScan(decodedText);
-            },
-        );
-        
+    useEffect(() => {
+        if (!scannerRef.current && containerRef.current) {
+            // Create scanner instance
+            scannerRef.current = new Html5Qrcode("qr-reader");
+            // Start scanning
+            scannerRef.current.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                },
+                (decodedText) => {
+                    if (onScan) onScan(decodedText);
+                },
+                () => {} // Ignore errors
+            ).catch(console.error);
+        }
+
+        // Cleanup
         return () => {
-            qrCameraScan.clear();
+            if (scannerRef.current) {
+                scannerRef.current.stop()
+                    .then(() => {
+                        scannerRef.current = null;
+                    })
+                    .catch(console.error);
+            }
         };
     }, []);
 
-    return <div id="reader"></div>;
+    return <div id="qr-reader" ref={containerRef} style={{ width: '100%', maxWidth: '600px' }} />;
 }

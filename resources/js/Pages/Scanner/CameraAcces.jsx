@@ -1,10 +1,26 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import CameraScan from './CameraScan';
 
 export default function CameraAccess({ scanned }) {
     const videoRef = useRef(null);
 
+    const [lastProcessedCode, setLastProcessedCode] = useState(null);
+    const isProcessingRef = useRef(false);
+    
     const handleScan = (decodedText) => {
+        if (isProcessingRef.current) return;
+
+        if (decodedText === lastProcessedCode) {
+            return;
+        }
+
+        setLastProcessedCode(decodedText);
+
+        isProcessingRef.current = true;
+        setTimeout(() => {
+            isProcessingRef.current = false;
+        }, 1000);
+        
         scanned(decodedText);
     };
 
