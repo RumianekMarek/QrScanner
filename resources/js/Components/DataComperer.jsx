@@ -2,6 +2,7 @@ import React from 'react';
 
 export default function DataComperer({ firstDate, secondDate, onResult = null }) {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const parseDate = (dateString) => new Date(dateString.replace(/\//g, '-'));
 
@@ -10,7 +11,7 @@ export default function DataComperer({ firstDate, secondDate, onResult = null })
     }
 
     const isFirstDateAfterToday = parseDate(firstDate) < today;
-    const isSecondDateBeforeToday = parseDate(secondDate) > today;
+    const isSecondDateBeforeToday = parseDate(secondDate) >= today;
 
     React.useEffect(() => {
         if (onResult) {

@@ -15,6 +15,7 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.jsx'),
         ),
     setup({ el, App, props }) {
+        console.log('[Debug] Inertia props received:', props);
         const root = createRoot(el);
 
         root.render(<App {...props} />);

@@ -1,32 +1,25 @@
 import { Html5QrcodeScanner } from "html5-qrcode";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { usePage } from "@inertiajs/react";
 
 export default function CameraScan({ onScan }) {
-    let scanCompleted = false;
-
     useEffect(() => {
         const qrCameraScan = new Html5QrcodeScanner("reader", {
-            fps: 2,
+            fps: 0.5,
             qrbox: { width: 250, height: 250 },
-            videoConstraints: { facingMode: "environment"},
-            rememberLastUsedCamera: false,
+            videoConstraints: { facingMode: "environment" },
         });
 
         qrCameraScan.render(
-            (decodedText, decodedResult) => {
-                if (!scanCompleted) { 
-                    scanCompleted = true; 
-                    if (onScan) onScan(decodedText);
-                }
+            (decodedText) => {
+                if (onScan) onScan(decodedText);
             },
-            (error) => {
-            }
         );
         
         return () => {
             qrCameraScan.clear();
         };
-    }, [onScan]);
+    }, []);
 
     return <div id="reader"></div>;
 }

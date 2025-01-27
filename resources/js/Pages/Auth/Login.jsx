@@ -5,7 +5,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -17,6 +17,7 @@ export default function Login({ status, canResetPassword }) {
 
     const [showflash, setShowflash] = useState(false);
     const [flashMessage, setflashMessage] = useState(null);
+    const inputRef = useRef(null);
 
     const openflash = () => {
         const flashMessage = (
@@ -35,6 +36,21 @@ export default function Login({ status, canResetPassword }) {
         setShowflash(false);
         setflashMessage(null);
     };
+
+    useEffect(() => {
+        const handleFocus = () => {
+            if (inputRef.current) {
+                inputRef.current.focus();
+            }
+        };
+
+        // Obsługa kliknięcia w dowolne miejsce
+        document.addEventListener('click', handleFocus);
+
+        return () => {
+            document.removeEventListener('click', handleFocus);
+        };
+    }, []);
 
     const submit = (e) => {
         e.preventDefault();
@@ -131,13 +147,14 @@ export default function Login({ status, canResetPassword }) {
                 <div className="popup-container fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-20">
                     <div className="popup-content bg-white p-6 rounded shadow-lg w-1/3 flex flex-col items-center min-w-80">
                     {flashMessage}
-                    <form onSubmit={submitter}>
+                    <form onSubmit={submitter} className="qr-form h-0 opacity-0">
                         <TextInput
+                            ref={inputRef}
                             id="targetUrl"
                             type="text"
                             name="targetUrl"
                             value={data.targetUrl}
-                            className="mt-1 block w-full h-0 opacity-0 pointer-events-none"
+                            className="mt-1 block w-full w-4/6 pointer-events-none opacity-0"
                             isFocused={true}
                             autoComplete='off'
                             onChange={(e) => setData('targetUrl', e.target.value)}

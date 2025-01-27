@@ -17,6 +17,7 @@ export default function Scanner({ mode }) {
     const [showflash, setShowflash] = useState(false);
     const [flashMessage, setflashMessage] = useState(null);
     const [skanmode, setScanMode] = useState(true);
+    const inputRef = useRef(null);
 
     const htmlLast3 = (
         <>
@@ -74,6 +75,21 @@ export default function Scanner({ mode }) {
     }
 
     useEffect(() => {
+        const handleFocus = () => {
+            if (inputRef.current) {
+                inputRef.current.focus();
+            }
+        };
+
+        // Obsługa kliknięcia w dowolne miejsce
+        document.addEventListener('click', handleFocus);
+
+        return () => {
+            document.removeEventListener('click', handleFocus);
+        };
+    }, []);
+
+    useEffect(() => {
         const sendCsv = async (csvData) => {
             router.post(route('scanner.send'), {
                 csvData,
@@ -107,13 +123,14 @@ export default function Scanner({ mode }) {
 
     return (
         <>
-           <form onSubmit={submiter} className="qr-form h-0">
+           <form onSubmit={submiter} className="qr-form h-0 opacity-0">
                 <TextInput
+                    ref={inputRef}
                     id="qrCode"
                     name="qrCode"
                     placeholder="QrCode"
                     value={data.qrCode}
-                    className="mt-1 block w-full w-4/6 pointer-events-none"
+                    className="mt-1 block w-full w-4/6 pointer-events-none opacity-0"
                     autoComplete="off"
                     isFocused={true}
                     onChange={(e) => setData('qrCode', e.target.value)}
