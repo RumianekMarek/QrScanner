@@ -35,14 +35,13 @@ class ScannerController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {   
-        // dd($request);
         $request->validate ([
             'qrCode' => 'required|string|max:255',
         ]);
 
         $user = UserDetail::where('user_id', $request->user()->id)->firstOrFail();
 
-        $pattern = '/^([A-Za-z]+)(\d{3})(\d+)(rnd)(\d+)$/';
+        $pattern = '/^([A-Za-z]+)(\d{3})(\d+)([A-Za-z]{3})(\d+)$/';
         $entry_id = '';
         $domain_meta = '';
 
@@ -54,12 +53,13 @@ class ScannerController extends Controller
         } 
         
         $domain = Fair::where('qr_details', 'LIKE', '%'. $domain_meta . '%')->get('domain');
+
         $event = new QrDataCurl($domain, $entry_id, $qrCode);
         event($event);
-
+        
         $data = $event->returner->data ?? new \stdClass();
         $data->qrCode = $qrCode;
-        $data->status = $event->returner->status ?? false;
+        $data->status = $event->returner->status ?? "false";
 
         $event_data = json_encode($data);
         
@@ -108,6 +108,6 @@ class ScannerController extends Controller
                 ]);
         });
         
-        return back()->with('status', ['message' => 'E-mail sent successfully.']);
+        return back()->with('message', 'E-mail sent successfully.');
     }
 }

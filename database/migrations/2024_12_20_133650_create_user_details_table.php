@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('company_name')->nullable();
             $table->string('placement')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('inactive');
+            $table->string('status')->default('inactive');
             $table->longText('scanner_data')->nullable();
             $table->timestamps();
         });

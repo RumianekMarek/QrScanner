@@ -21,6 +21,10 @@ export default function UserList({ users }) {
         setShowModal(false);
     };
     
+    const setUserState = (user_id) => {
+        post(route('admin.users.block' , {id: user_id,}));
+    }
+
     const LoginToken = (user_id) => {
         post(route('admin.users.token' , {id: user_id,}))
     }
@@ -51,7 +55,7 @@ export default function UserList({ users }) {
                     </thead>
                     <tbody>
                         {users.map((user) => (
-
+                        
                             <tr className="align-center" key={user.id}>
                                 <td className="border px-4 py-2 text-center">{user.id}</td>
                                 <td className="border px-4 py-2 text-center">{user.name}</td>
@@ -79,20 +83,34 @@ export default function UserList({ users }) {
                                 </td>
                                 <td className="border px-4 py-2 text-center">
                                     {!user.admin && (
-                                        <button
-                                            onClick={() => openPopup(user.details)}
-                                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 rounded"
-                                        >
-                                            {user.details ? 'Edytuj' : 'Add Details'}
-                                        </button>
+                                        <>
+                                            <button
+                                                onClick={() => openPopup(user.details)}
+                                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 rounded"
+                                            >
+                                                {user.details ? 'Edytuj' : 'Add Details'}
+                                            </button>
+                                            <button
+                                                onClick={() => {setUserState(user.id)}}
+                                                className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-4 rounded"
+                                            >
+                                                {(user.details.status !== 'blocked') ? 'Blokuj' : 'Odblokuj'}
+                                            </button>
+                                        </>
                                     )}
                                 </td>
-                                {user.admin ? <td className="border px-4 py-2 text-center">Admin</td> : (
-                                    <DataComperer
-                                        firstDate={singleFair(props.fairs, user.details.fair_meta)?.fair_start ?? null}
-                                        secondDate={singleFair(props.fairs, user.details.fair_meta)?.fair_end ?? null}
-                                    />
-                                    )}
+                                {user.admin ? (
+                                    <td className="border px-4 py-2 text-center">Admin</td>
+                                 ) : (
+                                    user.details.status == 'blocked' ? (
+                                        <td className="border px-4 py-2 text-center">Zablokowany</td>
+                                    ) : (
+                                        <DataComperer
+                                            firstDate={singleFair(props.fairs, user.details.fair_meta)?.fair_start ?? null}
+                                            secondDate={singleFair(props.fairs, user.details.fair_meta)?.fair_end ?? null}
+                                        />
+                                    )
+                                )}
                             </tr>
                         ))}
                     </tbody>

@@ -9,40 +9,36 @@ export default function CameraScan({ onScan }) {
     useEffect(() => {
         const timer = setTimeout(() => {
             if (!scannerRef.current && containerRef.current) {
-                // Tworzenie instancji skanera
                 scannerRef.current = new Html5Qrcode("qr-reader");
 
-                // Rozpoczęcie skanowania
                 scannerRef.current.start(
                     { facingMode: "environment" },
                     {
-                        fps: 10, // Ilość klatek na sekundę
+                        fps: 10,
                         qrbox: { width: 250, height: 250 },
                     },
                     (decodedText) => {
-                        console.log("Previous QR:", uniqueQR);
-                        console.log("Current QR:", decodedText);
-    
                         if (onScan && decodedText !== uniqueQR) {
-                            console.log('tak');
-                            uniqueQR = decodedText; // Zapisz aktualny tekst
-                            onScan(decodedText); // Wywołaj funkcję `onScan`
+                            uniqueQR = decodedText;
+                            onScan(decodedText);
                         }
                     },
                     () => {}
-                ).catch(console.error);
+                ).catch();
             }
-        }, 2000); // Opóźnienie 2 sekundy
+        }, 1000);
 
-        // Czyszczenie przy odmontowaniu komponentu
         return () => {
-            clearTimeout(timer); // Anulowanie timera, jeśli komponent zostanie odmontowany
+            clearTimeout(timer);
             if (scannerRef.current) {
-                scannerRef.current.stop()
-                    .then(() => {
-                        scannerRef.current = null;
-                    })
-                    .catch(console.error);
+                try {
+                    scannerRef.current.stop()
+                        .then(() => {
+                            scannerRef.current = null;
+                        })
+                        .catch(console.error);
+                } catch {
+                }
             }
         };
     }, []);
