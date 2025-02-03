@@ -28,18 +28,22 @@ export default function CameraScan({ onScan }) {
             }
         }, 1000);
 
-        return () => {
-            clearTimeout(timer);
-            if (scannerRef.current) {
-                try {
-                    scannerRef.current.stop()
-                        .then(() => {
-                            scannerRef.current = null;
-                        })
-                        .catch(console.error);
-                } catch {
-                }
+        const stopScanner = async () => {
+            try 
+            {
+                clearTimeout(timer);
+                await scannerRef.current.stop()
+                scannerRef.current = null;
+                
             }
+            catch (error)
+            {
+                console.warn(error);
+            }
+        };
+
+        return () => {
+            stopScanner();
         };
     }, []);
 

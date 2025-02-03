@@ -114,69 +114,62 @@ class UserController extends Controller
         return redirect()->back()->with('scannerData', $scannerData);
     }
 
-    // public function restore(Request $request)
-    // {   
-    //     dd($request);
+    public function restore($id, $qrCode)
+    {   
+        $user = UserDetail::where('user_id', $id)->firstOrFail();
 
-    //     $id = $request->input('id');
-    //     $qrCode = $request->input('qrCode');
-    //     $oldScann = $request->input('oldScann');
-
-    //     $user = UserDetail::where('user_id', $id)->firstOrFail();
-
-    //     $pattern = '/^([A-Za-z]+)(\d{3})(\d+)(rnd)(\d+)$/';
-    //     $entry_id = '';
-    //     $domain_meta = '';
-
-    //     $qrCode = $request->qrCode;
-
-    //     if (preg_match($pattern, $qrCode, $matches)) {
-
-    //         $domain_meta = $matches[1] . $matches[2];
-    //         $entry_id = $matches[3];
-    //     } 
+        $pattern = '/^([A-Za-z]+)(\d{3})(\d+)([A-Za-z]+)(\d+)$/';
+        $entry_id = '';
+        $domain_meta = '';
         
-    //     $domain = Fair::where('qr_details', 'LIKE', '%'. $domain_meta . '%')->get('domain');
-    //     if(!$domain->isNotEmpty()){
-    //         return redirect()->back().with('message', 'Qr Code Prefix nie został odnaleziony, sprawdź czy targi zostały dodane');
-    //     }
+        if (preg_match($pattern, $qrCode, $matches)) {
+
+            $domain_meta = $matches[1] . $matches[2];
+            $entry_id = $matches[3];
+        } else {
+            $qrCode = substr(preg_replace('/\s+/', '', $qrCode), 0, 32);
+        }
+        $domain = Fair::where('qr_details', 'LIKE', '%'. $domain_meta . '%')->get('domain');
+
+        if(!$domain->isNotEmpty()){
+            return redirect()->back()->with('message', 'Qr Code Prefix nie został odnaleziony, sprawdź czy targi zostały dodane');
+        }
        
-    //     $event = new QrDataCurl($domain, $entry_id, $qrCode);
-    //     event($event);
+        $event = new QrDataCurl($domain, $entry_id, $qrCode);
+        event($event);
         
-    //     if($event->returner === null){
-    //         foreach($domain as $index => $val){
-    //             $domain[$index]->domain = 'old.' . $val->domain;
-    //         }
-    //         $event = new QrDataCurl($domain, $entry_id, $qrCode);
-    //         event($event);
-    //     }
+        if($event->returner === null){
+            foreach($domain as $index => $val){
+                $domain[$index]->domain = 'old.' . $val->domain;
+            }
+            $event = new QrDataCurl($domain, $entry_id, $qrCode);
+            event($event);
+        }
 
-    //     $data = $event->returner->data ?? new \stdClass();
-    //     $data->qrCode = $qrCode;
-    //     $data->status = $event->returner->status ?? "false";
-    //     $newScann = UserDetail::where('user_id', $id)->value('scanner_data');
+        $data = $event->returner->data ?? new \stdClass();
+        $data->qrCode = $qrCode;
+        $data->status = $event->returner->status ?? "false";
 
-    //     if($data->status != "false"){
-    //         $event_data = json_encode($event->returner->data);
-    
-    //         $updatedScann = preg_replace_callback(
-    //             '/\{[^{}]*"qrCode":"' . preg_quote($qrCode, '/') . '"[^{}]*\}/',
-    //             function ($match) use ($event_data) {
-    //                 return $event_data;
-    //             },
-    //             $oldScann
-    //         );
+        $oldScann = UserDetail::where('user_id', $id)->value('scanner_data');
+        $updatedScann = '';
 
-    //         $newScann = UserDetail::where('user_id', $id)->value('scanner_data');
+        if($data->status != "false"){
+            $event_data = json_encode($event->returner->data);
+            
+            $updatedScann = preg_replace_callback(
+                '/\{[^{}]*"qrCode":"' . preg_quote($qrCode, '/') . '"[^{}]*\}/',
+                function ($match) use ($event_data) {
+                    return $event_data;
+                },
+                $oldScann
+            );
 
-    //         if($newScann == $oldScann){
-    //             UserDetail::where('user_id', $id)->update(['scanner_data' => $updatedScann]);
-    //         } else {
-    //             dd($newScann, $oldScann);
-    //         }
+            $newScann = UserDetail::where('user_id', $id)->value('scanner_data');
 
-    //     }
-    //     return redirect()->back();
-    // }
+            if($newScann == $oldScann){
+                UserDetail::where('user_id', $id)->update(['scanner_data' => $updatedScann]);
+            }
+        }
+        return redirect()->back()->with('scannerData', $updatedScann);
+    }
 }

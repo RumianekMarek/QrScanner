@@ -12,6 +12,7 @@ export default function DeviceScannerAcces({ scannerData }) {
     const scannerArray = (scannerData ? scannerData.split(';;') : []) ?? [];
     const [showflash, setShowflash] = useState(false);
     const [flashMessage, setflashMessage] = useState(null);
+    const [senderAllower, setSenderAllower] = useState(true);
 
     const downloadCsv = async (csvData) => {
         try {
@@ -38,6 +39,7 @@ export default function DeviceScannerAcces({ scannerData }) {
         })
     }
 
+
     useEffect(() => {
         if (message){
             if(props.auth.user.email.length > 30){
@@ -58,6 +60,18 @@ export default function DeviceScannerAcces({ scannerData }) {
         }, 5000)
     }, [flash])
 
+    const createCsv = (id) =>{
+        if (senderAllower){
+            router.post(route('scanner.download', { id }));
+
+            setSenderAllower(false);
+
+            setTimeout(() => {
+                setSenderAllower(true);
+            }, 5000)
+        }
+    }
+
     const closeflash = () => {
         setShowflash(null);
         setflashMessage(false);
@@ -77,14 +91,14 @@ export default function DeviceScannerAcces({ scannerData }) {
             <Head title="Qr Skaner" />
 
             <div className="float-right me-5">
-                <NavLink
-                    href={route('scanner.download', { id: user.id })}
-                    active={route().current('scanner.download')}
-                    method="post"
-                    className=" bg-green-300 text-xl ps-4 pe-4 pt-1 pb-1 m-5 rounded"
+                <PrimaryButton
+                    onClick={() => createCsv(user.id)}
+                    className=" bg-green-500 ps-8 pe-8 pt-2 pb-2 m-5 rounded"
+                    style={{fontSize: '20px'}}
+                    disabled={!senderAllower}
                 >
                     Pobierz
-                </NavLink>
+                </PrimaryButton>
             </div>
             <div className="sm:m-5">
                 <table className="table-auto border-collapse border border-gray-300 mt-4 max-w-full">
@@ -92,6 +106,7 @@ export default function DeviceScannerAcces({ scannerData }) {
                         <tr>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">ID</th>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Imię</th>
+                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Firma</th>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Email</th>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Telefon</th>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Kod QR</th>
@@ -108,6 +123,7 @@ export default function DeviceScannerAcces({ scannerData }) {
                                 <tr className="align-center"  key={key}>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{key}</td>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.name}</td>
+                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.company}</td>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.email}</td>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.phone}</td>
                                     <td className="border px-4 py-2 text-center ">{single.qrCode ?? ''}<span className="sm:hidden"><br/>{single.email}<br/>{single.phone}</span></td>

@@ -4,11 +4,12 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import NavLink from '@/Components/NavLink';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Select from '@/Components/Select';
+import Checkbox from "@/Components/Checkbox";
 
 export default function UserScans({ usersList }) {
     const { props } = usePage();
     const { flash, message , scannerData} = usePage().props;
-
+console.log(props);
     const csvData = usePage().props.flash;
     const user = usePage().props.auth.user;
 
@@ -16,6 +17,8 @@ export default function UserScans({ usersList }) {
     const [flashMessage, setflashMessage] = useState(null);
     const [selectedUser, setSelectedUser] = useState("");
     const [tableData, setTableData] = useState([]);
+
+    const [force, setForce] = useState(false);
 
     const downloadCsv = async (csvData) => {
         try {
@@ -88,18 +91,8 @@ export default function UserScans({ usersList }) {
         setflashMessage(false);
     };
 
-    const restoreAction = (id, qrCode, oldScann) => {
-        console.log(id);
-        console.log(qrCode);
-        console.log(oldScann);
-        router.post(route('admin.users.restore'), { 
-            id, 
-            qrCode, 
-            oldScann,
-        } , {
-            onSuccess: () => console.log("Sukces!"),
-            onError: (error) => console.error("Błąd:", error)
-        });
+    const restoreAction = (id, qrCode) => {
+        router.post(route('admin.users.restore', {id: id, qrCode: qrCode}));
     }
 
     return (
@@ -111,6 +104,10 @@ export default function UserScans({ usersList }) {
                     onChange={(e) => setSelectedUser(e.target.value)}
                 >
                 </Select>
+                <Checkbox
+                    name="force_change"
+                    onChange={() => setForce(prev => !prev)}
+                />
             </div>
              <div className="sm:m-5">
                 <div className="float-right me-5">
@@ -127,6 +124,7 @@ export default function UserScans({ usersList }) {
                         <tr>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">ID</th>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Imię</th>
+                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Firma</th>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Email</th>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Telefon</th>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Kod QR</th>
@@ -138,15 +136,16 @@ export default function UserScans({ usersList }) {
                             <tr className="align-center"  key={key}>
                                 <td className="border px-4 py-2 text-center hidden sm:table-cell">{key}</td>
                                 <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.name}</td>
+                                <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.company}</td>
                                 <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.email}</td>
                                 <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.phone}</td>
                                 <td className="border px-4 py-2 text-center ">{single.qrCode ?? ''}<span className="sm:hidden"><br/>{single.email}<br/>{single.phone}</span></td>
                                 <td className="border px-4 py-2 text-center ">{ 
-                                    (single.status && single.status != "false") ? 
+                                    (single.status && single.status != "false" && force != true) ? 
                                     single.status : 
 
                                     <button
-                                        onClick={() => restoreAction(selectedUser, single.qrCode, scannerData)}
+                                        onClick={() => restoreAction(selectedUser, single.qrCode)}
                                         className=" bg-green-300 text-xl ps-4 pe-4 pt-1 pb-1 rounded"
                                     >
                                         Ponów
