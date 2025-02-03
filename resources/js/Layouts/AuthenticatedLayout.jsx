@@ -2,19 +2,29 @@ import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import PrimaryButton from '@/Components/PrimaryButton';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+
+import { Link, usePage, router } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
+    const props = usePage();
+    const { message } = usePage().props;
     const csvData = usePage().props.flash;
     const user = usePage().props.auth.user;
+    const status = usePage().props.auth.status;
 
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+    const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
+
+    const logout = (e) => {
+        e.preventDefault();
+        router.post(route('logout'));
+    }
 
     return (
         <div className="min-h-screen bg-gray-100 relative z-10">
             <nav className="border-b border-gray-100 bg-white">
+            {user.admin || status != 'inactive' ? (
+                <>
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
                         <div className="flex">
@@ -26,6 +36,10 @@ export default function AuthenticatedLayout({ header, children }) {
                                      <PrimaryButton className="ms-4 bg-green-500 hover:bg-blue-800">Skaner</PrimaryButton>
                                 </NavLink>
                             </div>
+                        </div>
+
+                        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                            {header}
                         </div>
 
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
@@ -78,6 +92,13 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 as="button"
                                             >
                                                 Użytkownicy
+                                            </Dropdown.Link>
+                                            <Dropdown.Link
+                                                href={route('admin.users.scanner')}
+                                                method="get"
+                                                as="button"
+                                            >
+                                                Skany Użytkowników
                                             </Dropdown.Link>
                                             <Dropdown.Link
                                                 href={route('admin.fairs.index')}
@@ -167,7 +188,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     </div>
                     <div className="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink
-                            method="post"
+                            method="get"
                             href={route('scanner.list', { id: user.id })}
                         >
                             Lista Skanowania
@@ -195,17 +216,22 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
                     </div>
                 </div>
-            </nav>
-
-            {header && (
-                <header className="bg-white shadow">
+                </>
+                ) : (
+                    <>
                     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                         {header}
+                        <p className='uppercase'>{message}</p>
                     </div>
-                </header>
-            )}
+                    <button onClick={logout} className="absolute top-0 right-0 bg-red-500 text-white text-2xl color-white ps-4 pe-4 pt-1 pb-1 m-5 rounded"
+                    >
+                        Logout
+                    </button>
+                    </>
+                )}
+            </nav>
 
-            <main>{children}</main>
+            <main className='mt-3'>{children}</main>
         </div>
     );
 }

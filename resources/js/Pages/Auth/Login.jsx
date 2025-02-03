@@ -71,7 +71,7 @@ export default function Login({ status, canResetPassword }) {
             <Head title="Log in" />
 
             {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
+                <div className="mb-4 text-lg font-bold text-red-600 text-center">
                     {status}
                 </div>
             )}
@@ -160,7 +160,6 @@ export default function Login({ status, canResetPassword }) {
                             onChange={(e) => setData('targetUrl', e.target.value)}
                         />
                     </form>
-                        
                         <PrimaryButton className="mt-10 bg-red-500 active:bg-red-900" onClick={closeflash}>Close</PrimaryButton>
                     </div>
                 </div>

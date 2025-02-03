@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserDetail;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Events\UpdateUserStatus;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -29,10 +31,23 @@ class AuthenticatedSessionController extends Controller
      * Handle an incoming authentication request.
      */
     public function store(LoginRequest $request): RedirectResponse
-    {
+    {   
+        $user_id = User::where('email', $request->email)->value('id');
+        $userStatus = UserDetail::where('user_id', $user_id)->value('status');
+
+        if($userStatus == 'blocked'){
+            return redirect()->back()->with('status', 'Użytkownik nieaktywny');
+        }
+
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        event(new UpdateUserStatus($user_id));
+
+        if($userStatus == 'inactive'){
+            return redirect()->route('scanner.list', ['id' => $user_id]);
+        }
 
         return redirect()->route('scanner.create');
     }

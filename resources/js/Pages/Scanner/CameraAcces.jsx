@@ -20,7 +20,6 @@ export default function CameraAccess({ scanned }) {
         setTimeout(() => {
             isProcessingRef.current = false;
         }, 1000);
-        console.log(decodedText);
         scanned(decodedText);
     };
 
@@ -37,7 +36,7 @@ export default function CameraAccess({ scanned }) {
 
     return (
         <>  
-            <div className="w-4/5 mt-10 m-auto h-auto max-w-lg">
+            <div className="w-4/5 mt-3 m-auto h-auto max-w-lg">
                 <CameraScan onScan={handleScan} />
             </div>
         </>

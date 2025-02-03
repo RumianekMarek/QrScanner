@@ -15,8 +15,6 @@ export default function QrSkanner({ children }) {
                 </h2>
             }
         >
-            <Head title="Qr Skaner" />
-
             {user.admin ? (
             <div className="py-12 flex">
                 <div className="w-1/2 text-center">
@@ -41,7 +39,7 @@ export default function QrSkanner({ children }) {
                 </div>
             </div>
             ) : ( null )}
-            <main className='mt-10'>{children}</main>
+            {children}
         </AuthenticatedLayout>
     );
 }

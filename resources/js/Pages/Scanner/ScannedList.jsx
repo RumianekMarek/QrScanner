@@ -6,12 +6,13 @@ import PrimaryButton from '@/Components/PrimaryButton';
 
 export default function DeviceScannerAcces({ scannerData }) {
     const { props } = usePage();
-    const { flash } = usePage().props;
+    const { flash, message } = usePage().props;
     const csvData = usePage().props.flash;
     const user = usePage().props.auth.user;
     const scannerArray = (scannerData ? scannerData.split(';;') : []) ?? [];
     const [showflash, setShowflash] = useState(false);
     const [flashMessage, setflashMessage] = useState(null);
+    const [senderAllower, setSenderAllower] = useState(true);
 
     const downloadCsv = async (csvData) => {
         try {
@@ -38,15 +39,19 @@ export default function DeviceScannerAcces({ scannerData }) {
         })
     }
 
-     useEffect(() => {
-        if (flash && flash.message){
-            let flashMessage = (
-                <p className="text-center">
-                    {flash.message} <br/>
-                    <span className="text-xl">{props.auth.user.email}</span>
-                </p>
-            )
 
+    useEffect(() => {
+        if (message){
+            if(props.auth.user.email.length > 30){
+                const emailArray = props.auth.user.email.split('@');
+                const emailadress = emailArray[0] + '</p><p>' + emailArray[0];
+            }
+            let flashMessage = (
+                <>
+                    <p className="text-center">{message}</p>
+                    <p className="text-xl">{props.auth.user.email}</p>
+                </>
+            )
             setflashMessage(flashMessage);
             setShowflash(true);
         }
@@ -54,6 +59,18 @@ export default function DeviceScannerAcces({ scannerData }) {
             closeflash();
         }, 5000)
     }, [flash])
+
+    const createCsv = (id) =>{
+        if (senderAllower){
+            router.post(route('scanner.download', { id }));
+
+            setSenderAllower(false);
+
+            setTimeout(() => {
+                setSenderAllower(true);
+            }, 5000)
+        }
+    }
 
     const closeflash = () => {
         setShowflash(null);
@@ -74,24 +91,25 @@ export default function DeviceScannerAcces({ scannerData }) {
             <Head title="Qr Skaner" />
 
             <div className="float-right me-5">
-                <NavLink
-                    href={route('scanner.download', { id: user.id })}
-                    active={route().current('scanner.download')}
-                    method="post"
-                    className=" bg-green-300 text-xl ps-4 pe-4 pt-1 pb-1 m-5 rounded"
+                <PrimaryButton
+                    onClick={() => createCsv(user.id)}
+                    className=" bg-green-500 ps-8 pe-8 pt-2 pb-2 m-5 rounded"
+                    style={{fontSize: '20px'}}
+                    disabled={!senderAllower}
                 >
                     Pobierz
-                </NavLink>
+                </PrimaryButton>
             </div>
-            <div className="m-5">
-                <table className="table-auto w-full border-collapse border border-gray-300 mt-4">
+            <div className="sm:m-5">
+                <table className="table-auto border-collapse border border-gray-300 mt-4 max-w-full">
                     <thead>
                         <tr>
-                            <th className="border px-4 py-2 text-center">ID</th>
-                            <th className="border px-4 py-2 text-center">Imię</th>
-                            <th className="border px-4 py-2 text-center">Email</th>
-                            <th className="border px-4 py-2 text-center">Telefon</th>
-                            <th className="border px-4 py-2 text-center">Kod QR</th>
+                            <th className="border px-4 py-2 text-center hidden sm:table-cell">ID</th>
+                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Imię</th>
+                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Firma</th>
+                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Email</th>
+                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Telefon</th>
+                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Kod QR</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -103,11 +121,12 @@ export default function DeviceScannerAcces({ scannerData }) {
 
                             return (
                                 <tr className="align-center"  key={key}>
-                                    <td className="border px-4 py-2 text-center">{key}</td>
-                                    <td className="border px-4 py-2 text-center">{single.name}</td>
-                                    <td className="border px-4 py-2 text-center">{single.email}</td>
-                                    <td className="border px-4 py-2 text-center">{single.phone}</td>
-                                    <td className="border px-4 py-2 text-center">{single.qrCode ?? ''}</td>
+                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{key}</td>
+                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.name}</td>
+                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.company}</td>
+                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.email}</td>
+                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.phone}</td>
+                                    <td className="border px-4 py-2 text-center ">{single.qrCode ?? ''}<span className="sm:hidden"><br/>{single.email}<br/>{single.phone}</span></td>
                                 </tr>
                             )
                         })}
@@ -123,7 +142,5 @@ export default function DeviceScannerAcces({ scannerData }) {
                 </div>
             )}
         </AuthenticatedLayout>
-        
-
     )
 }

@@ -95,7 +95,7 @@ class QrDataCurl
                 // $all_fairs_entries[$all_fairs[$ch_key][2] . "_" . $fair_year] = $array['data'];
                 // $all_fairs_forms[$all_fairs[$ch_key][2] . "_" . $fair_year] = $array['forms'];
             }
-
+            
             curl_multi_remove_handle($mh, $ch);
             curl_close($ch);
         }
