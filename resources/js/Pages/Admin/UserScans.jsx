@@ -9,7 +9,7 @@ import Checkbox from "@/Components/Checkbox";
 export default function UserScans({ usersList }) {
     const { props } = usePage();
     const { flash, message , scannerData} = usePage().props;
-console.log(props);
+
     const csvData = usePage().props.flash;
     const user = usePage().props.auth.user;
 

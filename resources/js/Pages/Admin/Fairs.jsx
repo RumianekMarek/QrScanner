@@ -3,9 +3,11 @@ import { Link, usePage, useForm} from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import DataComperer from '@/Components/DataComperer';
 import PrimaryButton from '@/Components/PrimaryButton';
+import ButtonAction from '@/Components/ButtonAction';
 import TextInput from '@/Components/TextInput';
 
 export default function FairList({ fairs }) {
+    const { props } = usePage();
     const { data, setData, post, processing} = useForm({
         domain: '',
     });
@@ -71,7 +73,14 @@ export default function FairList({ fairs }) {
                                 }
                                 {   
                                 Object.values(fair).every((value) => value && value.name !== null) ? (
-                                    <td className="border px-4 py-2 text-center text-green-500">Dane Poprawne</td>
+                                    <td className="border px-4 py-2 text-center text-green-500">
+                                        <ButtonAction
+                                            endpoint="/fair_update"
+                                            data={{domain : fair.domain}}
+                                            label="Powtórz pobranie formularzy"
+                                            color="green"
+                                        />
+                                    </td>
                                 ) : (
                                     <td className="border px-4 py-2 text-center text-red-500">Brakuje Danych</td>
                                 )}

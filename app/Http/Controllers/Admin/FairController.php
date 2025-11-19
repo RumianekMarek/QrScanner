@@ -71,9 +71,19 @@ class FairController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request)
     {
-        //
+        $domain = $request->domain;
+
+        $cleanDomain = preg_replace('/^https?:\/\//', '', $request->domain);
+        $event = new FairCreating($cleanDomain);
+        event($event);
+
+        $form_meta_id = implode(', ', array_column($event->jsonData['forms'], 'form_meta_id'));
+
+        Fair::where('domain', $domain)->update(['qr_details' => $form_meta_id]);
+
+        return back()->with('success', 'Dane dla ' . $domain . ' pobrane prawidłowo');
     }
 
     /**

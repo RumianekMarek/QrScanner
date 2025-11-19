@@ -31,6 +31,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::post('/scanner/note', [ScannerController::class, 'saveNote'])->name('scanner.saveNote');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -60,6 +62,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     Route::get('/fairs', [FairController::class, 'index'])->name('fairs.index');
     Route::post('/fairs', [FairController::class, 'store'])->name('fairs.store');
+});
+
+Route::middleware(['admin'])->group(function () {
+    Route::post('/fair_update', [FairController::class, 'update'])->name('fair.update');
 });
 
 require __DIR__.'/auth.php';

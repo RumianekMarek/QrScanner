@@ -3,6 +3,7 @@ import { Head, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import NavLink from '@/Components/NavLink';
 import PrimaryButton from '@/Components/PrimaryButton';
+import NotePopup from '@/Components/NotePopup';
 
 export default function DeviceScannerAcces({ scannerData }) {
     const { props } = usePage();
@@ -10,6 +11,9 @@ export default function DeviceScannerAcces({ scannerData }) {
     const csvData = usePage().props.flash;
     const user = usePage().props.auth.user;
     const scannerArray = (scannerData ? scannerData.split(';;') : []) ?? [];
+    const [showNote, setShowNote] = useState(false);
+    const [noteDetails, setNoteDetails] = useState(false);
+    const [qrCode, setQrCode] = useState(false);
     const [showflash, setShowflash] = useState(false);
     const [flashMessage, setflashMessage] = useState(null);
     const [senderAllower, setSenderAllower] = useState(true);
@@ -39,6 +43,16 @@ export default function DeviceScannerAcces({ scannerData }) {
         })
     }
 
+    const openNote = (note, qrCode) => {
+        setNoteDetails(note);
+        setQrCode(qrCode);
+        setShowNote(true);
+    };
+
+    const closeNote = () => {
+        setNoteDetails(null);
+        setShowNote(false);
+    };
 
     useEffect(() => {
         if (message){
@@ -110,6 +124,7 @@ export default function DeviceScannerAcces({ scannerData }) {
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Email</th>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Telefon</th>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Kod QR</th>
+                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Notatka</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -127,11 +142,29 @@ export default function DeviceScannerAcces({ scannerData }) {
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.email}</td>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.phone}</td>
                                     <td className="border px-4 py-2 text-center ">{single.qrCode ?? ''}<span className="sm:hidden"><br/>{single.email}<br/>{single.phone}</span></td>
+                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">
+                                        <button
+                                            onClick={() => openNote(single.note, single.qrCode ?? '')}
+                                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 rounded"
+                                        >
+                                            {single.note ? 'Edytuj' : 'Dodaj'}
+                                        </button>
+                                    </td>
                                 </tr>
                             )
                         })}
                     </tbody>
                 </table>
+                    {/* User Details popup */}
+                    {showNote && (
+                        <NotePopup
+                            noteDetails={noteDetails}
+                            qrCode = {qrCode}
+                            user_id = {user.id}
+                            onClose={closeNote}
+                            target_route='scanner.saveNote'
+                        />
+                    )}
             </div>
             {showflash && (
                 <div className="popup-container fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-20">

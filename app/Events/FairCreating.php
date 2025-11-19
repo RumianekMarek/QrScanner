@@ -53,11 +53,10 @@ class FairCreating
             // Wyświetlenie szczegółów błędu
             $error = curl_error($ch);
             $error_no = curl_errno($ch);
-            // dd("cURL Error: {$error}, Code: {$error_no}");
+            dd("cURL Error: {$error}, Code: {$error_no}");
         }
 
         curl_close($ch);
-
         return json_decode($response, true);
     }
 

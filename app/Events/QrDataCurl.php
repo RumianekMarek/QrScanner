@@ -69,6 +69,7 @@ class QrDataCurl
         } while ($active && $status == CURLM_OK);
 
         foreach ($curl_handles as $ch_key => $ch) {
+
             if (curl_errno($ch)) {
                 echo 'Błąd: ' . curl_error($ch) . PHP_EOL;
             } else {
@@ -88,20 +89,21 @@ class QrDataCurl
                 //         echo $all_fairs[$ch_key][2] . ' status ' . $status . ' => error <br><br>';
                 //         continue 2;
                 // }
-                $all_response = json_decode(curl_multi_getcontent($ch));
-            
+                $decoded = json_decode(curl_multi_getcontent($ch));
+                if (!empty($decoded)) {
+                    $all_response = $decoded;
+                }
                 // $fair_year = (!empty($array['year'])) ? $array['year'] : date('Y');
 
                 // $all_fairs_entries[$all_fairs[$ch_key][2] . "_" . $fair_year] = $array['data'];
                 // $all_fairs_forms[$all_fairs[$ch_key][2] . "_" . $fair_year] = $array['forms'];
             }
-            
+
             curl_multi_remove_handle($mh, $ch);
             curl_close($ch);
         }
 
         curl_multi_close($mh);
-
         return $all_response;
     }
 

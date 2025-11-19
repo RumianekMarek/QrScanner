@@ -10,10 +10,10 @@ export default function UserDetailsPopup({ userDetails, fairs, onClose, target_r
 
     const { data, setData, post, processing, errors} = useForm({
         user_id: userDetails.id,
-        fair_meta: userDetails.fair_meta || '',
-        phone: userDetails.phone || '',
-        company_name: userDetails.company_name || '',
-        placement: userDetails.placement || '',
+        fair_meta: userDetails.details?.fair_meta ?? '',
+        phone: userDetails.details?.phone ?? '',
+        company_name: userDetails.details?.company_name ?? '',
+        placement: userDetails.details?.placement ?? '',
     });
 
     const submit = (e) => {
