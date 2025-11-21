@@ -76,7 +76,7 @@ class ScannerController extends Controller
     {
         $data = UserDetail::where('user_id', $id)->value('scanner_data');
         $data_array = explode(';;', $data);
-        $csv_data = "id,Email,Telefon,Imie i Nazwisko, ScanedCode \n";
+        $csv_data = "id;Email;Telefon;Firma;Imie i Nazwisko; ScanedCode \n";
 
         foreach($data_array as $index => $single){
             if(trim($single) == ""){ continue; }
@@ -84,10 +84,11 @@ class ScannerController extends Controller
             $single = json_decode($single);
 
             $csv_data .= $index + 1;
-            $csv_data .= ',' . ($single->email ?? ' ');
-            $csv_data .= ',' . ($single->phone ?? ' ');
-            $csv_data .= ',' . ($single->name ?? ' ');
-            $csv_data .= ',' . ($single->qrCode ?? ' ');
+            $csv_data .= ';' . ($single->email ?? ' ');
+            $csv_data .= ';' . ($single->phone ?? ' ');
+            $csv_data .= ';' . ($single->company ?? ' ');
+            $csv_data .= ';' . ($single->name ?? ' ');
+            $csv_data .= ';' . ($single->qrCode ?? ' ');
             $csv_data .= "\n";
         }
 
