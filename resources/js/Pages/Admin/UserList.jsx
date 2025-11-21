@@ -85,7 +85,7 @@ export default function UserList({ users }) {
                                     {!user.admin && (
                                         <>
                                             <button
-                                                onClick={() => openPopup(user.details)}
+                                                onClick={() => openPopup(user)}
                                                 className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 rounded"
                                             >
                                                 {user.details ? 'Edytuj' : 'Add Details'}
@@ -94,7 +94,7 @@ export default function UserList({ users }) {
                                                 onClick={() => {setUserState(user.id)}}
                                                 className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-4 rounded"
                                             >
-                                                {(user.details.status !== 'blocked') ? 'Blokuj' : 'Odblokuj'}
+                                                {(user.details?.status !== 'blocked') ? 'Blokuj' : 'Odblokuj'}
                                             </button>
                                         </>
                                     )}
@@ -102,12 +102,12 @@ export default function UserList({ users }) {
                                 {user.admin ? (
                                     <td className="border px-4 py-2 text-center">Admin</td>
                                  ) : (
-                                    user.details.status == 'blocked' ? (
+                                    user.details?.status == 'blocked' ? (
                                         <td className="border px-4 py-2 text-center">Zablokowany</td>
                                     ) : (
                                         <DataComperer
-                                            firstDate={singleFair(props.fairs, user.details.fair_meta)?.fair_start ?? null}
-                                            secondDate={singleFair(props.fairs, user.details.fair_meta)?.fair_end ?? null}
+                                            firstDate={singleFair(props.fairs, user.details?.fair_meta)?.fair_start ?? null}
+                                            secondDate={singleFair(props.fairs, user.details?.fair_meta)?.fair_end ?? null}
                                         />
                                     )
                                 )}

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\User;
 use App\Models\Fair;
 use App\Models\UserDetail;
+use App\Models\UserNote;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Events\LoginToken;
@@ -61,8 +62,10 @@ class UserController extends Controller
             'placement' => 'required|string|max:255',
         ]);
 
-        $user = UserDetail::findOrFail($request->user_id);
-        $user->update($request->only(['fair_meta', 'phone', 'company_name', 'placement']));
+        UserDetail::updateOrCreate(
+            ['user_id' => $request->user_id],
+            $request->only(['fair_meta', 'phone', 'company_name', 'placement'])
+        );
 
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
     }
@@ -134,7 +137,7 @@ class UserController extends Controller
         if(!$domain->isNotEmpty()){
             return redirect()->back()->with('message', 'Qr Code Prefix nie został odnaleziony, sprawdź czy targi zostały dodane');
         }
-       
+
         $event = new QrDataCurl($domain, $entry_id, $qrCode);
         event($event);
         
@@ -155,7 +158,6 @@ class UserController extends Controller
 
         if($data->status != "false"){
             $event_data = json_encode($event->returner->data);
-            
             $updatedScann = preg_replace_callback(
                 '/\{[^{}]*"qrCode":"' . preg_quote($qrCode, '/') . '"[^{}]*\}/',
                 function ($match) use ($event_data) {
@@ -165,7 +167,6 @@ class UserController extends Controller
             );
 
             $newScann = UserDetail::where('user_id', $id)->value('scanner_data');
-
             if($newScann == $oldScann){
                 UserDetail::where('user_id', $id)->update(['scanner_data' => $updatedScann]);
             }

@@ -3,13 +3,16 @@ import { Head, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import NavLink from '@/Components/NavLink';
 import PrimaryButton from '@/Components/PrimaryButton';
+import NotePopup from '@/Components/NotePopup';
 
-export default function DeviceScannerAcces({ scannerData }) {
+export default function DeviceScannerAcces({  scannerData, userNotes, user }) {
     const { props } = usePage();
     const { flash, message } = usePage().props;
     const csvData = usePage().props.flash;
-    const user = usePage().props.auth.user;
     const scannerArray = (scannerData ? scannerData.split(';;') : []) ?? [];
+    const [showNote, setShowNote] = useState(false);
+    const [noteDetails, setNoteDetails] = useState(false);
+    const [qrCode, setQrCode] = useState(false);
     const [showflash, setShowflash] = useState(false);
     const [flashMessage, setflashMessage] = useState(null);
     const [senderAllower, setSenderAllower] = useState(true);
@@ -39,6 +42,16 @@ export default function DeviceScannerAcces({ scannerData }) {
         })
     }
 
+    const openNote = (note, qrCode) => {
+        setNoteDetails(note);
+        setQrCode(qrCode);
+        setShowNote(true);
+    };
+
+    const closeNote = () => {
+        setNoteDetails(null);
+        setShowNote(false);
+    };
 
     useEffect(() => {
         if (message){
@@ -101,7 +114,7 @@ export default function DeviceScannerAcces({ scannerData }) {
                 </PrimaryButton>
             </div>
             <div className="sm:m-5">
-                <table className="table-auto border-collapse border border-gray-300 mt-4 max-w-full">
+                <table className="table-auto border-collapse border border-gray-300 mt-4 max-w-full w-full sm:w-auto">
                     <thead>
                         <tr>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">ID</th>
@@ -110,6 +123,7 @@ export default function DeviceScannerAcces({ scannerData }) {
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Email</th>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Telefon</th>
                             <th className="border px-4 py-2 text-center hidden sm:table-cell">Kod QR</th>
+                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Notatka</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -118,20 +132,61 @@ export default function DeviceScannerAcces({ scannerData }) {
                                 return null;
                             }
                             const single = JSON.parse(value);
-
+                            const noteObj = userNotes.find(n => n.qr_code === single.qrCode ?? '');
                             return (
-                                <tr className="align-center"  key={key}>
+                                <tr className="align-center" key={key}>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{key}</td>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.name}</td>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.company}</td>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.email}</td>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.phone}</td>
-                                    <td className="border px-4 py-2 text-center ">{single.qrCode ?? ''}<span className="sm:hidden"><br/>{single.email}<br/>{single.phone}</span></td>
+                                    <td className="border px-4 py-2 text-center ">{single.qrCode ?? ''}
+                                        <span className="sm:hidden"><br/>
+                                            {single.email}<br/>
+                                            {single.phone}<br/>
+                                            {single.qrCode ? (
+                                                <button
+                                                    onClick={() => openNote(noteObj?.note, single.qrCode ?? '')}
+                                                    className={`text-white font-bold py-1 px-4 rounded ${
+                                                        noteObj?.note 
+                                                            ? 'bg-green-500 hover:bg-green-700'
+                                                            : 'bg-blue-500 hover:bg-blue-700'
+                                                    }`}
+                                                >
+                                                    {noteObj?.note ? 'Edytuj Notkę' : 'Dodaj Notkę'}
+                                                </button>
+                                            ) : null}
+                                        </span>
+                                    </td>
+                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">
+                                        {single.qrCode ? (
+                                            <button
+                                                onClick={() => openNote(noteObj?.note, single.qrCode ?? '')}
+                                                className={`text-white font-bold py-1 px-4 rounded ${
+                                                    noteObj?.note 
+                                                        ? 'bg-green-500 hover:bg-green-700'
+                                                        : 'bg-blue-500 hover:bg-blue-700'
+                                                }`}
+                                            >
+                                                {noteObj?.note ? 'Edytuj Notkę' : 'Dodaj Notkę'}
+                                            </button>
+                                        ) : 'Brak Kodu QR' }
+                                    </td>
                                 </tr>
                             )
                         })}
                     </tbody>
                 </table>
+                    {/* User Details popup */}
+                    {showNote && (
+                        <NotePopup
+                            noteDetails={noteDetails}
+                            qrCode = {qrCode}
+                            user_id = {user.id}
+                            onClose={closeNote}
+                            target_route='scanner.saveNote'
+                        />
+                    )}
             </div>
             {showflash && (
                 <div className="popup-container fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-20">
