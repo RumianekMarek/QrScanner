@@ -88,7 +88,10 @@ class QrDataCurl
                 //         echo $all_fairs[$ch_key][2] . ' status ' . $status . ' => error <br><br>';
                 //         continue 2;
                 // }
-                $all_response = json_decode(curl_multi_getcontent($ch));
+                $decoded = json_decode(curl_multi_getcontent($ch));
+                if (!empty($decoded)) {
+                    $all_response = $decoded;
+                }
             
                 // $fair_year = (!empty($array['year'])) ? $array['year'] : date('Y');
 
