@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\User;
 use App\Models\UserDetail;
 use App\Models\UserNote;
 use App\Models\Fair;
@@ -24,10 +25,14 @@ class ScannerController extends Controller
 
     public function list($id): Response
     {   
-        $scannerData = UserDetail::where('user_id', $id)->value('scanner_data');
+        $user = User::with(['details', 'notes'])->findOrFail($id);
+        $scannerData = $user->details->scanner_data;
+        $userNotes = $user->notes;
 
         return Inertia::render('Scanner/ScannedList', [
             'scannerData' => $scannerData,
+            'userNotes' => $userNotes,
+            'user' => $user,
         ]);
     }
 

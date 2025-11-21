@@ -2,6 +2,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import VoiceInputButton from '@/Components/VoiceInputButton';
 import { useForm } from '@inertiajs/react';
 
 export default function NotePopup({ noteDetails = '', qrCode = 'unknown',user_id, onClose, target_route }) {
@@ -21,7 +22,7 @@ export default function NotePopup({ noteDetails = '', qrCode = 'unknown',user_id
 
     return (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
-            <div className="bg-white p-6 rounded shadow-lg w-1/2">
+            <div className="bg-white p-6 rounded shadow-lg w-96 h-fit sm:w-1/2">
                 <h2 className="text-xl font-bold">Edit User Details</h2>
                 {/* Sprawdzenie, czy qr_code istnieje */}
                 {!data.qr_code ? (
@@ -45,8 +46,7 @@ export default function NotePopup({ noteDetails = '', qrCode = 'unknown',user_id
                                 id="note"
                                 name="note"
                                 value={data.note}
-                                className="mt-1 block w-full border rounded px-3 py-2"
-                                rows={5}
+                                className="mt-1 block w-full border rounded px-3 py-2 sm:h-44 h-80"
                                 onChange={(e) => setData('note', e.target.value)}
                                 required
                                 autoFocus
@@ -55,6 +55,11 @@ export default function NotePopup({ noteDetails = '', qrCode = 'unknown',user_id
                             <InputError message={errors.note} className="mt-2" />
                         </div>
                         <div className="mt-4 flex justify-end">
+                            <VoiceInputButton
+                                onChange={(text) => 
+                                    setData('note', data.note ? data.note + " " + text : text)
+                                }
+                            />
                             <PrimaryButton className="ml-4 bg-green-500 hover:bg-green-800" disabled={processing}>
                                 Zapisz
                             </PrimaryButton>
