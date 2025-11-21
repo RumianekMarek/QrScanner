@@ -93,6 +93,7 @@ class QrDataCurl
                 if (!empty($decoded)) {
                     $all_response = $decoded;
                 }
+            
                 // $fair_year = (!empty($array['year'])) ? $array['year'] : date('Y');
 
                 // $all_fairs_entries[$all_fairs[$ch_key][2] . "_" . $fair_year] = $array['data'];

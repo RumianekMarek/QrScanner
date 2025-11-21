@@ -31,10 +31,10 @@ class FairController extends Controller
             'domain' => 'required|string|max:255',
         ]);
         $cleanDomain = preg_replace('/^https?:\/\//', '', $request->domain);
-        
+
         $event = new FairCreating($cleanDomain);
         event($event);
-        
+
         $form_meta_id = '';
         foreach($event->jsonData['forms'] as $val){
             $form_meta_id .= $val['form_meta_id'] . ', ';
