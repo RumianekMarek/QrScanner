@@ -26,7 +26,7 @@ class QrDataCurl
 
     protected function generateToken($domain) 
     {
-        $secret_key = 'gmlbu5oNGsbPCCS';
+        $secret_key = 'CvmJtiPdohSGs926';
         return hash_hmac('sha256', $domain, $secret_key);
     }
 

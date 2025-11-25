@@ -21,7 +21,7 @@ export default function NotePopup({ noteDetails = '', qrCode = 'unknown',user_id
     };
 
     return (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-20">
             <div className="bg-white p-6 rounded shadow-lg w-96 h-fit sm:w-1/2">
                 <h2 className="text-xl font-bold">Edit User Details</h2>
                 {/* Sprawdzenie, czy qr_code istnieje */}

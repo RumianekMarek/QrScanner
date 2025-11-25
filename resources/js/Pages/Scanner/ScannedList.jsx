@@ -4,18 +4,29 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import NavLink from '@/Components/NavLink';
 import PrimaryButton from '@/Components/PrimaryButton';
 import NotePopup from '@/Components/NotePopup';
+import Pagination from '@/Components/Pagination';
 
 export default function DeviceScannerAcces({  scannerData, userNotes, user }) {
     const { props } = usePage();
     const { flash, message } = usePage().props;
     const csvData = usePage().props.flash;
-    const scannerArray = (scannerData ? scannerData.split(';;') : []) ?? [];
+    
     const [showNote, setShowNote] = useState(false);
     const [noteDetails, setNoteDetails] = useState(false);
     const [qrCode, setQrCode] = useState(false);
     const [showflash, setShowflash] = useState(false);
     const [flashMessage, setflashMessage] = useState(null);
     const [senderAllower, setSenderAllower] = useState(true);
+    
+    const [pageLength, setPageLength] = useState(200);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const scannerArray = (scannerData ? scannerData.split(';;').filter(item => item.trim() !== '') : []) ?? [];
+    const totalEntries = scannerArray.length;
+    const currentPageDataArray = scannerArray.slice(
+        (currentPage - 1) * pageLength,
+        currentPage * pageLength,
+    );
 
     const downloadCsv = async (csvData) => {
         try {
@@ -53,26 +64,6 @@ export default function DeviceScannerAcces({  scannerData, userNotes, user }) {
         setShowNote(false);
     };
 
-    useEffect(() => {
-        if (message){
-            if(props.auth.user.email.length > 30){
-                const emailArray = props.auth.user.email.split('@');
-                const emailadress = emailArray[0] + '</p><p>' + emailArray[0];
-            }
-            let flashMessage = (
-                <>
-                    <p className="text-center">{message}</p>
-                    <p className="text-xl">{props.auth.user.email}</p>
-                </>
-            )
-            setflashMessage(flashMessage);
-            setShowflash(true);
-        }
-        setTimeout(() => {
-            closeflash();
-        }, 5000)
-    }, [flash])
-
     const createCsv = (id) =>{
         if (senderAllower){
             router.post(route('scanner.download', { id }));
@@ -93,6 +84,27 @@ export default function DeviceScannerAcces({  scannerData, userNotes, user }) {
     if (typeof csvData === 'string' && csvData.trim() !== '') {
         sendCsv(csvData);
     }
+
+    useEffect(() => {
+        if (message){
+            if(props.auth.user.email.length > 30){
+                const emailArray = props.auth.user.email.split('@');
+                const emailadress = emailArray[0] + '</p><p>' + emailArray[0];
+            }
+            let flashMessage = (
+                <>
+                    <p className="text-center">{message}</p>
+                    <p className="text-xl">{props.auth.user.email}</p>
+                </>
+            )
+            setflashMessage(flashMessage);
+            setShowflash(true);
+        }
+        setTimeout(() => {
+            closeflash();
+        }, 5000)
+    }, [flash])
+
     return (
         <AuthenticatedLayout
             header={
@@ -127,15 +139,16 @@ export default function DeviceScannerAcces({  scannerData, userNotes, user }) {
                         </tr>
                     </thead>
                     <tbody>
-                        { Object.entries(scannerArray).map(([key, value]) => {
+                        { Object.entries(currentPageDataArray).map(([key, value]) => {
                             if(value.length < 10 ){
                                 return null;
                             }
+                            const trueKey = (currentPage - 1) * pageLength;
                             const single = JSON.parse(value);
                             const noteObj = userNotes.find(n => n.qr_code === single.qrCode ?? '');
                             return (
                                 <tr className="align-center" key={key}>
-                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{key}</td>
+                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{parseInt(key) + parseInt(trueKey) + 1}</td>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.name}</td>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.company}</td>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.email}</td>
@@ -177,16 +190,24 @@ export default function DeviceScannerAcces({  scannerData, userNotes, user }) {
                         })}
                     </tbody>
                 </table>
-                    {/* User Details popup */}
-                    {showNote && (
-                        <NotePopup
-                            noteDetails={noteDetails}
-                            qrCode = {qrCode}
-                            user_id = {user.id}
-                            onClose={closeNote}
-                            target_route='scanner.saveNote'
-                        />
-                    )}
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(scannerArray.length / pageLength)}
+                    totalEntries={totalEntries}
+                    onPageChange={setCurrentPage}
+                    onPageLengthChange={setPageLength} 
+                />
+
+                {/* User Details popup */}
+                {showNote && (
+                    <NotePopup
+                        noteDetails={noteDetails}
+                        qrCode = {qrCode}
+                        user_id = {user.id}
+                        onClose={closeNote}
+                        target_route='scanner.saveNote'
+                    />
+                )}
             </div>
             {showflash && (
                 <div className="popup-container fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-20">

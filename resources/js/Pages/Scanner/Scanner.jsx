@@ -6,18 +6,36 @@ import DeviceScannerAcces from './DeviceScannerAcces';
 import TextInput from '@/Components/TextInput';
 import NavLink from '@/Components/NavLink';
 import PrimaryButton from '@/Components/PrimaryButton';
+import NotePopup from '@/Components/NotePopup';
 
-export default function Scanner({ mode }) {
+export default function Scanner({ mode, userNotes }) {
     const { data, setData, post, processing, reset} = useForm({
         qrCode: '',
     });
     const { props } = usePage();
     const { flash } = usePage().props;
     const csvData = usePage().props.flash;
+
     const [showflash, setShowflash] = useState(false);
     const [flashMessage, setflashMessage] = useState(null);
     const [skanmode, setScanMode] = useState(true);
+
+    const [showNote, setShowNote] = useState(false);
+    const [noteDetails, setNoteDetails] = useState(false);
+    const [qrCode, setQrCode] = useState(false);
+
     const inputRef = useRef(null);
+
+    const openNote = (note, qrCode) => {
+        setNoteDetails(note);
+        setQrCode(qrCode);
+        setShowNote(true);
+    };
+
+    const closeNote = () => {
+        setNoteDetails(null);
+        setShowNote(false);
+    };
 
     const htmlLast3 = (
         <>
@@ -27,11 +45,24 @@ export default function Scanner({ mode }) {
                 if(value.length < 5){
                     return;
                 }
+                
                 const entry = JSON.parse(value);
-
+                const noteObj = userNotes.find(n => n.qr_code === entry['qrCode'] ?? '');
+                
                 return (
-                    <p key={key}>
+                    <p key={key} className="my-3">
                         {entry['email'] ? entry['email'] : entry['qrCode']}
+
+                        <button
+                            onClick={() => openNote(noteObj?.note, entry['qrCode'] ?? '')}
+                            className={`text-white font-bold py-1 px-4 mx-3 rounded ${
+                                noteObj?.note 
+                                    ? 'bg-green-500 hover:bg-green-700'
+                                    : 'bg-blue-500 hover:bg-blue-700'
+                            }`}
+                        >
+                            {noteObj?.note ? 'Edytuj Notkę' : 'Dodaj Notkę'}
+                        </button>
                     </p>
                 )
             })}
@@ -166,12 +197,24 @@ export default function Scanner({ mode }) {
             }
 
             {showflash && (
-                <div className="popup-container fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-20">
+                <div className="popup-container fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
                     <div className="popup-content bg-white p-6 rounded shadow-lg w-1/3 flex flex-col items-center min-w-80">
                         {flashMessage}
                         <PrimaryButton className="mt-10 bg-red-500 active:bg-red-900" onClick={closeflash}>Close</PrimaryButton>
                     </div>
                 </div>
+            )}
+
+            {/* User Details popup */}
+            {showNote && (
+                <NotePopup
+                    className = "z-10"
+                    noteDetails={noteDetails}
+                    qrCode = {qrCode}
+                    user_id = {props.auth.user.id}
+                    onClose={closeNote}
+                    target_route='scanner.saveNote'
+                />
             )}
         </>
     )

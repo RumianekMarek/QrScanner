@@ -18,8 +18,14 @@ class ScannerController extends Controller
 {
     public function create(?string $mode = 'camera'): Response
     {
+        $userId = auth()->user()->id;
+        $user = User::with(['details', 'notes'])->findOrFail($userId);
+        $scannerData = $user->details->scanner_data;
+        $userNotes = $user->notes;
+
         return Inertia::render('Scanner/Scanner', [
             'mode' => $mode,
+            'userNotes' => $userNotes,
         ]);
     }
 
@@ -80,20 +86,28 @@ class ScannerController extends Controller
 
     public function download($id)
     {
-        $data = UserDetail::where('user_id', $id)->value('scanner_data');
+        $user_data = User::with(['details', 'notes'])->findOrFail($id);
+        $data = $user_data->details->scanner_data;
+        $notes = $user_data->notes;
+
+        $notesColl = $notes->map->only(['qr_code', 'note']);
+
         $data_array = explode(';;', $data);
-        $csv_data = "id,Email,Telefon,Imie i Nazwisko, ScanedCode \n";
+        $csv_data = "id,Email,Telefon,Imie i Nazwisko, ScanedCode, Notatka \n";
 
         foreach($data_array as $index => $single){
             if(trim($single) == ""){ continue; }
-            
+
             $single = json_decode($single);
+
+            $singleNote = $notesColl->firstWhere('qr_code', $single->qrCode ?? null);
 
             $csv_data .= $index + 1;
             $csv_data .= ',' . ($single->email ?? ' ');
             $csv_data .= ',' . ($single->phone ?? ' ');
             $csv_data .= ',' . ($single->name ?? ' ');
             $csv_data .= ',' . ($single->qrCode ?? ' ');
+            $csv_data .= ',' . ($singleNote['note'] ?? ' ');
             $csv_data .= "\n";
         }
 

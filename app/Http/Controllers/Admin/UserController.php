@@ -112,9 +112,15 @@ class UserController extends Controller
 
     public function list(Request $request, $id)
     {   
-        $scannerData = UserDetail::where('user_id', $id)->value('scanner_data');
-
-        return redirect()->back()->with('scannerData', $scannerData);
+        $user = User::with(['details', 'notes'])->findOrFail($id);
+        $scannerData = $user->details->scanner_data ?? '';
+        $userNotes = $user->notes->toArray();
+        return redirect()->back()->with(
+            'userData', [
+                'notes' => $userNotes,
+                'scannerData' => $scannerData,
+            ]
+        );
     }
 
     public function restore($id, $qrCode)
