@@ -1,1 +1,0 @@
-import{j as e}from"./app-CPZnGP4g.js";function n(){return e.jsx("div",{id:"input-scan",className:"m-20",children:e.jsx("h1",{className:"text-center text-5xl font-bold",children:"Zeskanuj Kod"})})}export{n as default};
