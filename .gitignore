@@ -1,20 +1,86 @@
-/.phpunit.cache
+# ========================================================================
+# --- ASSETY I FRONTEND (Vite / React) ---
+# ========================================================================
+
+# Skompilowane pliki produkcyjne. Wykluczamy, bo robisz builda ręcznie na serwerze.
+# Dzięki temu unikasz konfliktów przy zmianie nazw plików z hashem (np. app-X123.js).
+/public/build/
+
+# Folder z bibliotekami JS. Waży setki MB i zależy od systemu (Windows/Linux).
+# Zawsze odtwarzany komendą 'npm install'.
+node_modules/
+
+# Plik pomocniczy dla serwera deweloperskiego Vite (Hot Module Replacement).
 /public/hot
-/storage/*.key
-/storage/pail
-/vendor
+
+# Logi błędów menedżerów paczek.
+npm-debug.log
+yarn-error.log
+
+
+# ========================================================================
+# --- KONFIGURACJA I SEKRETY (Bezpieczeństwo) ---
+# ========================================================================
+
+# Najważniejsze: Pliki z hasłami, kluczami API i dostępem do bazy. 
+# NIGDY nie mogą trafić do repozytorium!
 .env
 .env.backup
 .env.production
-.phpactor.json
-.phpunit.result.cache
+
+# Klucze szyfrujące używane przez Laravel (np. do ciasteczek lub paszportu).
+/storage/*.key
+
+# Pliki konfiguracyjne dla specyficznych środowisk (np. starego Homestead).
 Homestead.json
 Homestead.yaml
 auth.json
-npm-debug.log
-yarn-error.log
-/.fleet
-/.idea
-/.nova
-/.vscode
-/.zed
+
+
+# ========================================================================
+# --- LOGI I PLIKI TYMCZASOWE (System Laravela) ---
+# ========================================================================
+
+# Logi aplikacji. Jeśli ich nie wykluczysz, 'git status' zawsze będzie pokazywał zmiany.
+/storage/logs/*.log
+
+# Pamięć podręczna systemu (Laravel cache, sesje użytkowników, skompilowane widoki Blade).
+/storage/framework/sessions/*
+/storage/framework/views/*.php
+/storage/framework/cache/data/*
+
+# Nowe narzędzie Laravela do debugowania (Laravel Pail).
+/storage/pail
+
+
+# ========================================================================
+# --- NARZĘDZIA, TESTY I IDE (Środowisko pracy) ---
+# ========================================================================
+
+# Zależności PHP instalowane przez Composer. Ich miejsce jest w 'vendor/', nie w Gicie.
+/vendor/
+
+# Cache i wyniki testów automatycznych (PHPUnit).
+/.phpunit.cache
+.phpunit.result.cache
+
+# Pliki konfiguracyjne Twojego edytora/IDE. 
+# Wykluczamy je, by nie narzucać innym Twoich ustawień okien czy kolorów.
+/.vscode/
+/.idea/
+/.fleet/
+/.nova/
+/.zed/
+.phpactor.json
+
+
+# ========================================================================
+# --- INNE (Pozostałości i Baza Danych) ---
+# ========================================================================
+
+# Zrzuty bazy danych. Często robimy je ręcznie przed migracją – nie chcemy ich w repo.
+*.sql
+
+# Pliki systemowe (np. Thumbs.db na Windowsie lub .DS_Store na Macu).
+.DS_Store
+Thumbs.db

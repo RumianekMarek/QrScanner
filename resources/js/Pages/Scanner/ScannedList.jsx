@@ -145,7 +145,7 @@ export default function DeviceScannerAcces({  scannerData, userNotes, user }) {
                             }
                             const trueKey = (currentPage - 1) * pageLength;
                             const single = JSON.parse(value);
-                            const noteObj = userNotes.find(n => n.qr_code === single.qrCode ?? '');
+                            const noteObj = userNotes.find(n => n.qr_code === (single.qrCode ?? ''));
                             return (
                                 <tr className="align-center" key={key}>
                                     <td className="border px-4 py-2 text-center hidden sm:table-cell">{parseInt(key) + parseInt(trueKey) + 1}</td>

@@ -8,15 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('user_notes', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('restrict');
-            $table->string('qr_code');
-            $table->text('note');
-            $table->timestamps();
+        if (!Schema::hasTable('user_notes')) {
+            Schema::create('user_notes', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained('users')->onDelete('restrict');
+                $table->string('qr_code');
+                $table->text('note');
+                $table->timestamps();
 
-            $table->unique(['user_id', 'qr_code']);
-        });
+                $table->unique(['user_id', 'qr_code']);
+            });
+        }
     }
 
     public function down(): void

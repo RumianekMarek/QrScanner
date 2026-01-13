@@ -47,7 +47,7 @@ export default function Scanner({ mode, userNotes }) {
                 }
                 
                 const entry = JSON.parse(value);
-                const noteObj = userNotes.find(n => n.qr_code === entry['qrCode'] ?? '');
+                const noteObj = userNotes.find(n => n.qr_code === (entry['qrCode'] ?? ''));
                 
                 return (
                     <p key={key} className="my-3">

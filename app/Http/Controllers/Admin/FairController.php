@@ -16,7 +16,7 @@ class FairController extends Controller
     // Wyświetlanie listy użytkowników
     public function index()
     {
-        $fairs = Fair::all();
+        $fairs = Fair::latest('fair_start')->get();
         return inertia('Admin/Fairs', [ 
             'fairs' => $fairs,
         ]);
@@ -40,14 +40,18 @@ class FairController extends Controller
             $form_meta_id .= $val['form_meta_id'] . ', ';
         }
 
-        $fair_details = Fair::create([
-            'fair_meta' => $event->jsonData['meta'] ?? null,
-            'domain' => $cleanDomain,
-            'fair_name' => $event->jsonData['name'] ?? null,
-            'fair_start' => isset($event->jsonData['start']) ? explode(' ', $event->jsonData['start'])[0] : null,
-            'fair_end' => isset($event->jsonData['start']) ? explode(' ', $event->jsonData['end'])[0] : null,
-            'qr_details' => $form_meta_id ?? null,
-        ]);
+        $fair_details = Fair::updateOrCreate(
+            [
+                'domain' => $cleanDomain,
+            ],
+            [
+                'fair_meta' => $event->jsonData['meta'] ?? null,
+                'fair_name' => $event->jsonData['name'] ?? null,
+                'fair_start' => isset($event->jsonData['start']) ? explode(' ', $event->jsonData['start'])[0] : null,
+                'fair_end' => isset($event->jsonData['start']) ? explode(' ', $event->jsonData['end'])[0] : null,
+                'qr_details' => $form_meta_id ?? null,
+            ]
+        );
         
         return redirect()->route('admin.fairs.index')->with('success', 'Targi dodane!');
     }
