@@ -56,8 +56,8 @@ class HandleInertiaRequests extends Middleware
             ],
             'cameraInitialized' => session()->get('camera_initialized', false),
             'lastScans' => $lastScans,
-            'flash' => session()->get('status'),
-            'message' => session()->get('message'),
+            'flash' => session('status'),
+            'message' => session('message'),
             ...($sessionIndex !== null ? [$sessionIndex => $sessionData] : []),
         ];
     }

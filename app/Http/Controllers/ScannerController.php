@@ -53,16 +53,32 @@ class ScannerController extends Controller
 
         $user = UserDetail::where('user_id', $request->user()->id)->firstOrFail();
 
-        $pattern = '/^([A-Za-z]+)(\d{3})(\d+)([A-Za-z]{3})(\d+)$/';
         $entry_id = '';
         $domain_meta = '';
 
         $qrCode = $request->qrCode;
 
-        if (preg_match($pattern, $qrCode, $matches)) {
-            $domain_meta = $matches[1] . $matches[2];
-            $entry_id = $matches[3];
-        } 
+        $qrParts = explode('rnd', $qrCode);
+        $maxLength = strlen($qrParts[0]);
+        $match = false;
+        $i = 0;
+
+        while($match == false){
+            $first = substr($qrParts[0], $i);
+            $fLen = strlen($first);
+            $sec = substr($qrParts[1], -$fLen);
+            $bool = ($first == $sec);
+            $first = $first;
+            $sec = $sec;
+            if($first == $sec){
+                $entry_id = $first;
+                $domain_meta = substr($qrParts[0],0 ,  $i);
+                $match = true;
+            } else {
+                $match = false;
+                $i++;
+            }
+        }
         
         $domain = Fair::where('qr_details', 'LIKE', '%'. $domain_meta . '%')->get('domain');
 

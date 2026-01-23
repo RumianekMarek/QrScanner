@@ -41,7 +41,7 @@ class FairCreating
         curl_setopt($ch, CURLOPT_URL, 'https://' . $domain . '/wp-content/plugins/custom-element/bdg_stats/bdg_stats.php');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, ['last_id' => 99999, 'last_form' => 0, 'add_data' => true]);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, ['last_id' => 9999999, 'last_form' => 0, 'add_data' => true]);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Authorization: ' . $token,
         ));

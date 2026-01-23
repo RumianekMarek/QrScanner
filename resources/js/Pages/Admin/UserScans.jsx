@@ -25,6 +25,7 @@ export default function UserScans({ usersList }) {
     const scannerArray = useRef([]);
     const currentPage = useRef(1);
 
+    console.log(props);
 
     const totalEntries = useRef(0);
 

@@ -126,18 +126,30 @@ class UserController extends Controller
     public function restore($id, $qrCode)
     {   
         $user = UserDetail::where('user_id', $id)->firstOrFail();
-
-        $pattern = '/^([A-Za-z]+)(\d{3})(\d+)([A-Za-z]+)(\d+)$/';
         $entry_id = '';
         $domain_meta = '';
         
-        if (preg_match($pattern, $qrCode, $matches)) {
+        $qrParts = explode('rnd', $qrCode);
+        $maxLength = strlen($qrParts[0]);
+        $match = false;
+        $i = 0;
 
-            $domain_meta = $matches[1] . $matches[2];
-            $entry_id = $matches[3];
-        } else {
-            $qrCode = substr(preg_replace('/\s+/', '', $qrCode), 0, 32);
+        while($match == false){
+            $first = substr($qrParts[0], $i);
+            $fLen = strlen($first);
+            $sec = substr($qrParts[1], -$fLen);
+
+            if($first == $sec){
+                $entry_id = $first;
+                $domain_meta = substr($qrParts[0],0 ,  $i);
+                $match = true;
+            } else {
+                $match = false;
+                $i++;
+            }
         }
+
+
         $domain = Fair::where('qr_details', 'LIKE', '%'. $domain_meta . '%')->get('domain');
 
         if(!$domain->isNotEmpty()){
@@ -146,7 +158,7 @@ class UserController extends Controller
 
         $event = new QrDataCurl($domain, $entry_id, $qrCode);
         event($event);
-        
+
         if($event->returner === null){
             foreach($domain as $index => $val){
                 $domain[$index]->domain = 'old.' . $val->domain;
@@ -177,6 +189,7 @@ class UserController extends Controller
                 UserDetail::where('user_id', $id)->update(['scanner_data' => $updatedScann]);
             }
         }
+        
         return redirect()->back()->with('scannerData', $updatedScann);
     }
 }
