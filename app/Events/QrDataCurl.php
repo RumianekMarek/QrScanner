@@ -2,6 +2,8 @@
 
 namespace App\Events;
 
+use App\Models\Fair;
+
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
@@ -43,10 +45,10 @@ class QrDataCurl
                 continue;
             }
 
-            $token = $this->generateToken($single_domain->domain);
+            $token = $this->generateToken($single_domain);
 
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, 'https://' . $single_domain->domain . '/wp-content/plugins/custom-element/other/scanner_output.php');
+            curl_setopt($ch, CURLOPT_URL, 'https://' . $single_domain . '/wp-content/plugins/custom-element/other/scanner_output.php');
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, ['entry_id' => $entry_id]);
@@ -67,36 +69,22 @@ class QrDataCurl
                 curl_multi_select($mh);
             }
         } while ($active && $status == CURLM_OK);
+        
+        $isCloser = null;
 
         foreach ($curl_handles as $ch_key => $ch) {
-
             if (curl_errno($ch)) {
                 echo 'Błąd: ' . curl_error($ch) . PHP_EOL;
             } else {
-                // $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                // switch ($status) {
-                //     case '301':
-                //         echo $all_fairs[$ch_key][2] . ' status 301 => moved permanently <br><br>';
-                //         $all_fairs_entries[$all_fairs[$ch_key][2] . "_" . $fair_year] = 'redirected';
-                //         continue 2;
-                //     case '403':
-                //         echo $all_fairs[$ch_key][2] . ' status 403 -> forbidden access <br><br>';
-                //         $all_fairs_entries[$all_fairs[$ch_key][2] . "_" . $fair_year] = 'forbiden';
-                //         continue 2;
-                //     case '200':
-                //         break;
-                //     default: 
-                //         echo $all_fairs[$ch_key][2] . ' status ' . $status . ' => error <br><br>';
-                //         continue 2;
-                // }
                 $decoded = json_decode(curl_multi_getcontent($ch));
-                if (!empty($decoded)) {
+                $isItCloser = Fair::where('domain', $domain[$ch_key])->value('fair_start');
+                if(!empty($decoded) && 
+                    !empty($isItCloser) && 
+                    (empty($isCloser) || strtotime($isItCloser) < strtotime($isCloser))
+                ){
+                    $isCloser = $isItCloser;
                     $all_response = $decoded;
                 }
-                // $fair_year = (!empty($array['year'])) ? $array['year'] : date('Y');
-
-                // $all_fairs_entries[$all_fairs[$ch_key][2] . "_" . $fair_year] = $array['data'];
-                // $all_fairs_forms[$all_fairs[$ch_key][2] . "_" . $fair_year] = $array['forms'];
             }
 
             curl_multi_remove_handle($mh, $ch);

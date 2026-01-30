@@ -50,54 +50,78 @@ class ScannerController extends Controller
         $request->validate ([
             'qrCode' => 'required|string|max:255',
         ]);
-
-        $user = UserDetail::where('user_id', $request->user()->id)->firstOrFail();
-
-        $entry_id = '';
-        $domain_meta = '';
-
+        
+        $id = $request->user()->id;
         $qrCode = $request->qrCode;
+        $entry_id = '';
+        $event = null;
+        $data =  new \stdClass();
 
+        $domain_meta = substr($qrCode, 0 , 7);
         $qrParts = explode('rnd', $qrCode);
-        $maxLength = strlen($qrParts[0]);
-        $match = false;
-        $i = 0;
+        $entry_id = str_replace($domain_meta, '', $qrParts[0]);
 
-        while($match == false){
-            $first = substr($qrParts[0], $i);
-            $fLen = strlen($first);
-            $sec = substr($qrParts[1], -$fLen);
-            $bool = ($first == $sec);
-            $first = $first;
-            $sec = $sec;
-            if($first == $sec){
-                $entry_id = $first;
-                $domain_meta = substr($qrParts[0],0 ,  $i);
-                $match = true;
+        if(preg_match('/\d+w\d+/', $entry_id)){
+
+            $event = new NewQrDataCurl($qrCode);
+            $eventData = $event->returner->data->person;
+
+            $data->company = $eventData->company ?? '';
+            $data->name = $eventData->fullName ?? '';
+            $data->email = $eventData->email ?? '';
+            $data->phone = $eventData->phone ?? '';
+            $data->status = ($event->returner->success ?? '') ? 'true' : 'false';
+
+        } else {
+            $domain = Fair::where('qr_details', 'LIKE', '%'. ($domain_meta  . ',') . '%')->pluck('domain');
+    
+            if($domain->isNotEmpty() && !empty($qrParts[0]) && !empty($qrParts[1])){
+                
+                $event = new QrDataCurl($domain, $entry_id, $qrCode);
+                event($event);
+    
+                if($event->returner === null){
+                    foreach($domain as $index => $val){
+                        $domain[$index]->domain = 'old.' . $val->domain;
+                    }
+                    $event = new QrDataCurl($domain, $entry_id, $qrCode);
+                    event($event);
+                }
+                
+                $eventData = $event->returner->data;
+
+                $data->company = $eventData->company ?? '';
+                $data->name = $eventData->name ?? '';
+                $data->email = $eventData->email ?? '';
+                $data->phone = $eventData->phone ?? '';
+                $data->status = $event->returner->status ?? '';
             } else {
-                $match = false;
-                $i++;
+                $data->status = 'false';
             }
         }
-        
-        $domain = Fair::where('qr_details', 'LIKE', '%'. $domain_meta . '%')->get('domain');
 
-        $event = new QrDataCurl($domain, $entry_id, $qrCode);
-        event($event);
-        
-        $data = $event->returner->data ?? new \stdClass();
         $data->qrCode = $qrCode;
-        $data->status = $event->returner->status ?? "false";
+        $updatedScann = '';
 
-        $event_data = json_encode($data);
-        
-        $scannerDetails = $user->scanner_data . $event_data . ';; ';
-        
-        $user->update([
-            'scanner_data' => $scannerDetails,
-        ]);
+        $eventData = json_encode($data) . ';; ';
+        $userDetail = UserDetail::where('user_id', $id)->first();
 
-        return back()->with('status', $data);
+        if($userDetail){
+            $userDetail->scanner_data .= $eventData;
+            $userDetail->save();
+        }
+        
+        $user = User::with(['details', 'notes'])->findOrFail($id);
+        $scannerData = $user->details->scanner_data;
+
+        $userNotes = $user->notes;
+
+        $lastScans = array_slice(array_filter(explode(';; ', $scannerData)), -3);
+
+        return redirect()->back()
+            ->with('lastScans', $lastScans)
+            ->with('userNotes', $userNotes)
+            ->with('status', true);
     }
 
     public function download($id)
@@ -109,7 +133,7 @@ class ScannerController extends Controller
         $notesColl = $notes->map->only(['qr_code', 'note']);
 
         $data_array = explode(';;', $data);
-        $csv_data = "id,Email,Telefon,Imie i Nazwisko, ScanedCode, Notatka \n";
+        $csv_data = "id,Email,Telefon,Imie i Nazwisko, Firma, ScanedCode, Notatka \n";
 
         foreach($data_array as $index => $single){
             if(trim($single) == ""){ continue; }
@@ -122,6 +146,7 @@ class ScannerController extends Controller
             $csv_data .= ',' . ($single->email ?? ' ');
             $csv_data .= ',' . ($single->phone ?? ' ');
             $csv_data .= ',' . ($single->name ?? ' ');
+            $csv_data .= ',' . ($single->company ?? ' ');
             $csv_data .= ',' . ($single->qrCode ?? ' ');
             $csv_data .= ',' . ($singleNote['note'] ?? ' ');
             $csv_data .= "\n";

@@ -6,7 +6,7 @@ import NavLink from '@/Components/NavLink';
 export default function QrSkanner({ children }) {
     const { props } = usePage();
     const user = usePage().props.auth.user;
-
+    console.log('QRscanner');
     return (
         <AuthenticatedLayout
             header={

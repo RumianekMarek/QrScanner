@@ -8,15 +8,20 @@ use App\Models\UserDetail;
 use App\Models\UserNote;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+
 use App\Events\LoginToken;
 use App\Events\QrDataCurl;
+use App\Events\NewQrDataCurl;
 
 class UserController extends Controller
 {
     // Wyświetlanie listy użytkowników
     public function index()
     {
-        $users = User::with('details')->get();
+        $users = User::with('details')
+            ->latest()
+            ->get();
+
         $fairs = Fair::select('fair_meta', 'fair_name', 'fair_start', 'fair_end')
             ->whereNotNull('fair_meta')
             ->whereNotNull('fair_name')
@@ -103,7 +108,7 @@ class UserController extends Controller
 
     public function scanner(Request $request)
     {
-        $users = User::with('details')->get();
+        $users = User::with('details')->latest()->get();
 
         return inertia('Admin/UserScans', [
             'usersList' => $users,
@@ -124,58 +129,73 @@ class UserController extends Controller
     }
 
     public function restore($id, $qrCode)
-    {   
-        $user = UserDetail::where('user_id', $id)->firstOrFail();
+    {
         $entry_id = '';
-        $domain_meta = '';
-        
+        $event = null;
+        $data =  new \stdClass();
+        $domain_meta = substr($qrCode, 0 , 7);
         $qrParts = explode('rnd', $qrCode);
-        $maxLength = strlen($qrParts[0]);
-        $match = false;
-        $i = 0;
+        $entry_id = str_replace($domain_meta, '', $qrParts[0]);
 
-        while($match == false){
-            $first = substr($qrParts[0], $i);
-            $fLen = strlen($first);
-            $sec = substr($qrParts[1], -$fLen);
 
-            if($first == $sec){
-                $entry_id = $first;
-                $domain_meta = substr($qrParts[0],0 ,  $i);
-                $match = true;
+        if(preg_match('/\d+w\d+/', $entry_id)){
+
+            $event = new NewQrDataCurl($qrCode);
+            $eventData = $event->returner->data->person;
+
+            $data->company = $eventData->company ?? '';
+            $data->name = $eventData->fullName ?? '';
+            $data->email = $eventData->email ?? '';
+            $data->phone = $eventData->phone ?? '';
+            $data->status = ($event->returner->success ?? '') ? 'true' : 'false';
+
+        } else {
+            $domain = Fair::where('qr_details', 'LIKE', '%'. ($domain_meta  . ',') . '%')->pluck('domain');
+    
+            if($domain->isNotEmpty() && !empty($qrParts[0]) && !empty($qrParts[1])){
+                
+                $event = new QrDataCurl($domain, $entry_id, $qrCode);
+                event($event);
+    
+                if($event->returner === null){
+                    foreach($domain as $index => $val){
+                        $domain[$index]->domain = 'old.' . $val->domain;
+                    }
+                    $event = new QrDataCurl($domain, $entry_id, $qrCode);
+                    event($event);
+                }
+                
+                $eventData = $event->returner->data ?? (object)[];
+
+                $data->company = $eventData->company ?? '';
+                $data->name = $eventData->name ?? '';
+                $data->email = $eventData->email ?? '';
+                $data->phone = $eventData->phone ?? '';
+                $data->status = $event->returner->status ?? '';
             } else {
-                $match = false;
-                $i++;
+                $user = User::with(['details', 'notes'])->findOrFail($id);
+                $scannerData = $user->details->scanner_data ?? '';
+                $userNotes = $user->notes->toArray();
+    
+                return redirect()->back()
+                    ->with(
+                        'userData', [
+                            'notes' => $userNotes,
+                            'scannerData' => $scannerData,
+                        ]
+                    )
+                    ->with('message', 'Qr Code Prefix nie został odnaleziony, sprawdź czy targi zostały dodane');
             }
         }
 
-
-        $domain = Fair::where('qr_details', 'LIKE', '%'. $domain_meta . '%')->get('domain');
-
-        if(!$domain->isNotEmpty()){
-            return redirect()->back()->with('message', 'Qr Code Prefix nie został odnaleziony, sprawdź czy targi zostały dodane');
-        }
-
-        $event = new QrDataCurl($domain, $entry_id, $qrCode);
-        event($event);
-
-        if($event->returner === null){
-            foreach($domain as $index => $val){
-                $domain[$index]->domain = 'old.' . $val->domain;
-            }
-            $event = new QrDataCurl($domain, $entry_id, $qrCode);
-            event($event);
-        }
-
-        $data = $event->returner->data ?? new \stdClass();
         $data->qrCode = $qrCode;
-        $data->status = $event->returner->status ?? "false";
 
-        $oldScann = UserDetail::where('user_id', $id)->value('scanner_data');
         $updatedScann = '';
 
         if($data->status != "false"){
-            $event_data = json_encode($event->returner->data);
+            $event_data = json_encode($data);
+            $oldScann = UserDetail::where('user_id', $id)->value('scanner_data');
+
             $updatedScann = preg_replace_callback(
                 '/\{[^{}]*"qrCode":"' . preg_quote($qrCode, '/') . '"[^{}]*\}/',
                 function ($match) use ($event_data) {
@@ -184,12 +204,22 @@ class UserController extends Controller
                 $oldScann
             );
 
-            $newScann = UserDetail::where('user_id', $id)->value('scanner_data');
-            if($newScann == $oldScann){
+            if ($updatedScann !== $oldScann) {
                 UserDetail::where('user_id', $id)->update(['scanner_data' => $updatedScann]);
             }
+            
+            $user = User::with(['details', 'notes'])->findOrFail($id);
+            $scannerData = $user->details->scanner_data ?? '';
+            $userNotes = $user->notes->toArray();
         }
         
-        return redirect()->back()->with('scannerData', $updatedScann);
+        return redirect()->back()
+            ->with(
+                'userData', [
+                    'notes' => $userNotes,
+                    'scannerData' => $scannerData,
+                ]
+            )
+            ->with('message', 'QR code poprawnie odnaleziony');
     }
 }
