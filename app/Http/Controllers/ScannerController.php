@@ -10,9 +10,13 @@ use App\Models\User;
 use App\Models\UserDetail;
 use App\Models\UserNote;
 use App\Models\Fair;
-use App\Events\QrDataCurl;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CsvEmail;
+
+use App\Events\LoginToken;
+use App\Events\QrDataCurl;
+use App\Events\NewQrDataCurl;
+use App\Events\CartPolandQrDataCurl;
 
 class ScannerController extends Controller
 {
@@ -71,7 +75,19 @@ class ScannerController extends Controller
             $data->email = $eventData->email ?? '';
             $data->phone = $eventData->phone ?? '';
             $data->status = ($event->returner->success ?? '') ? 'true' : 'false';
+        } else if(preg_match('/^\d+/', $domain_meta)){
+            $event = new CartPolandQrDataCurl($qrCode);
+            $eventData = $event[0] ?? [];
 
+            if(!empty($eventData)){
+                $data->company = $eventData['company'] ?? '';
+                $data->name = ($eventData['imie'] ?? '') . '  ' . ($eventData['nazwisko'] ?? '');
+                $data->email = $eventData['email'] ?? '';
+                $data->phone = $eventData['telefon'] ?? '';
+                $data->status = 'true';
+            } else {
+                $data->status = 'false';
+            }
         } else {
             $domain = Fair::where('qr_details', 'LIKE', '%'. ($domain_meta  . ',') . '%')->pluck('domain');
     

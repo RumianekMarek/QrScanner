@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Events\LoginToken;
 use App\Events\QrDataCurl;
 use App\Events\NewQrDataCurl;
+use App\Events\CartPolandQrDataCurl;
 
 class UserController extends Controller
 {
@@ -134,12 +135,10 @@ class UserController extends Controller
         $event = null;
         $data =  new \stdClass();
         $domain_meta = substr($qrCode, 0 , 7);
-        $qrParts = explode('rnd', $qrCode);
-        $entry_id = str_replace($domain_meta, '', $qrParts[0]);
-
-
+        $qrParts = explode('rnd', strtolower($qrCode));
+        $entry_id = str_replace(strtolower($domain_meta), '', $qrParts[0]);
+        
         if(preg_match('/\d+w\d+/', $entry_id)){
-
             $event = new NewQrDataCurl($qrCode);
             $eventData = $event->returner->data->person;
 
@@ -149,14 +148,27 @@ class UserController extends Controller
             $data->phone = $eventData->phone ?? '';
             $data->status = ($event->returner->success ?? '') ? 'true' : 'false';
 
+        } else if(preg_match('/^\d+/', $domain_meta)){
+            $event = new CartPolandQrDataCurl($qrCode);
+            $eventData = $event[0] ?? [];
+
+            if(!empty($eventData)){
+                $data->company = $eventData['company'] ?? '';
+                $data->name = ($eventData['imie'] ?? '') . '  ' . ($eventData['nazwisko'] ?? '');
+                $data->email = $eventData['email'] ?? '';
+                $data->phone = $eventData['telefon'] ?? '';
+                $data->status = 'true';
+            } else {
+                $data->status = 'false';
+            }
         } else {
             $domain = Fair::where('qr_details', 'LIKE', '%'. ($domain_meta  . ',') . '%')->pluck('domain');
-    
+            
             if($domain->isNotEmpty() && !empty($qrParts[0]) && !empty($qrParts[1])){
                 
                 $event = new QrDataCurl($domain, $entry_id, $qrCode);
                 event($event);
-    
+                
                 if($event->returner === null){
                     foreach($domain as $index => $val){
                         $domain[$index]->domain = 'old.' . $val->domain;
