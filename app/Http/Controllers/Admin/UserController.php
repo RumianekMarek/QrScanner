@@ -150,7 +150,7 @@ class UserController extends Controller
 
         } else if(preg_match('/^\d+/', $domain_meta)){
             $event = new CartPolandQrDataCurl($qrCode);
-            $eventData = $event[0] ?? [];
+            $eventData = $event->returner[0] ?? [];
 
             if(!empty($eventData)){
                 $data->company = $eventData['company'] ?? '';
