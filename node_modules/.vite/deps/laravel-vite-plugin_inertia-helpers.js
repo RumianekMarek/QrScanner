@@ -1,4 +1,4 @@
-import "./chunk-DC5AMYBS.js";
+import "./chunk-2TUXWMP5.js";
 
 // node_modules/laravel-vite-plugin/inertia-helpers/index.js
 async function resolvePageComponent(path, pages) {

@@ -126,34 +126,39 @@ export default function DeviceScannerAcces({  scannerData, userNotes, user }) {
                 </PrimaryButton>
             </div>
             <div className="sm:m-5">
-                <table className="table-auto border-collapse border border-gray-300 mt-4 max-w-full w-full sm:w-auto">
+                <table className="table-fixed border-collapse border mt-4 w-full sm:w-full">
                     <thead>
                         <tr>
-                            <th className="border px-4 py-2 text-center hidden sm:table-cell">ID</th>
-                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Imię</th>
-                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Firma</th>
-                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Email</th>
-                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Telefon</th>
-                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Kod QR</th>
-                            <th className="border px-4 py-2 text-center hidden sm:table-cell">Notatka</th>
+                            <th className="border overflow-hidden text-center hidden sm:table-cell sm:w-[40px]">ID</th>
+                            <th className="border overflow-hidden text-center hidden sm:table-cell sm:w-[150px]">Imię</th>
+                            <th className="border overflow-hidden text-center hidden sm:table-cell sm:w-[150px]">Firma/Nip</th>
+                            <th className="border overflow-hidden text-center hidden sm:table-cell sm:w-[200px]">Email</th>
+                            <th className="border overflow-hidden text-center hidden sm:table-cell sm:w-[150px]">Telefon</th>
+                            <th className="border overflow-hidden text-center hidden sm:table-cell sm:w-[150px]">Adres</th>
+                            <th className="border overflow-hidden text-center hidden sm:table-cell sm:w-[150px]">Kod QR</th>
+                            <th className="border overflow-hidden text-center hidden sm:table-cell">Zainteresowania</th>
+                            <th className="border overflow-hidden text-center hidden sm:table-cell sm:w-[100px]">Notatka</th>
                         </tr>
                     </thead>
                     <tbody>
                         { Object.entries(currentPageDataArray).map(([key, value]) => {
-                            if(value.length < 10 ){
+                            if(value.length < 10){
                                 return null;
                             }
                             const trueKey = (currentPage - 1) * pageLength;
                             const single = JSON.parse(value);
+                            if (!single.qrCode) return null;
+                            
                             const noteObj = userNotes.find(n => n.qr_code === (single.qrCode ?? ''));
                             return (
                                 <tr className="align-center" key={key}>
-                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{parseInt(key) + parseInt(trueKey) + 1}</td>
-                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.name}</td>
-                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.company}</td>
-                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.email}</td>
-                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">{single.phone}</td>
-                                    <td className="border px-4 py-2 text-center ">{single.qrCode ?? ''}
+                                    <td className="border border-[3px] border-gray-700 overflow-hidden text-center hidden sm:table-cell">{parseInt(key) + parseInt(trueKey) + 1}</td>
+                                    <td className="border border-[3px] border-gray-700 overflow-hidden text-center hidden sm:table-cell">{single.name}</td>
+                                    <td className="border border-[3px] border-gray-700 overflow-hidden text-center hidden sm:table-cell">{single.company}</td>
+                                    <td className="border border-[3px] border-gray-700 overflow-hidden text-center hidden sm:table-cell">{single.email}</td>
+                                    <td className="border border-[3px] border-gray-700 overflow-hidden text-center hidden sm:table-cell">{single.phone}</td>
+                                    <td className="border border-[3px] border-gray-700 overflow-hidden text-center hidden sm:table-cell">{single.adress}</td>
+                                    <td className="border border-[3px] border-gray-700 overflow-hidden text-center ">{single.qrCode ?? ''}
                                         <span className="sm:hidden"><br/>
                                             {single.email}<br/>
                                             {single.phone}<br/>
@@ -171,11 +176,12 @@ export default function DeviceScannerAcces({  scannerData, userNotes, user }) {
                                             ) : null}
                                         </span>
                                     </td>
-                                    <td className="border px-4 py-2 text-center hidden sm:table-cell">
+                                    <td className="border border-[3px] border-gray-700 overflow-hidden  text-center hidden sm:table-cell">{single.interests}</td>
+                                    <td className="border border-[3px] border-gray-700 overflow-hidden text-center hidden sm:table-cell">
                                         {single.qrCode ? (
                                             <button
                                                 onClick={() => openNote(noteObj?.note, single.qrCode ?? '')}
-                                                className={`text-white font-bold py-1 px-4 rounded ${
+                                                className={`text-white font-bold py-1 px-2 rounded ${
                                                     noteObj?.note 
                                                         ? 'bg-green-500 hover:bg-green-700'
                                                         : 'bg-blue-500 hover:bg-blue-700'

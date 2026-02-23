@@ -127,6 +127,11 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'scanner_backup' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/scanner_backups.log'),
+            'days' => env('LOG_DAILY_DAYS', 30),
+            'level' => 'info',
+        ],
     ],
-
 ];

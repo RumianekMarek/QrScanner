@@ -11,6 +11,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class CartPolandQrDataCurl
 {
@@ -26,17 +27,12 @@ class CartPolandQrDataCurl
         $this->returner = $this->fetchEntryData($qrCode);
     }
 
-    // protected function generateToken($domain) 
-    // {
-    //     $secret_key = 'CvmJtiPdohSGs926';
-    //     return hash_hmac('sha256', $domain, $secret_key);
-    // }
-
     protected function fetchEntryData($qrCode)
     {  
         $payload = [
             "tabela"=> "rejestracja5",
-            "kolumny"=> ["email", "telefon", "imie", "nazwisko"],
+            "kolumny"=> ["email", "telefon", "imie", "nazwisko", "ulica", "numer", "kod_pocztowy", "miasto", "kraj", "nip", "zainteresowania1", "zainteresowania2", "zainteresowania3", "zainteresowania4", "zainteresowania5", "zainteresowania6", "zainteresowania7", "zainteresowania8", "zainteresowania9"
+            ],
             "filtry"=> [
                 ["kod", $qrCode],
             ],

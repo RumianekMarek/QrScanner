@@ -34,7 +34,8 @@ class AuthenticatedSessionController extends Controller
     {   
         $user_id = User::where('email', $request->email)->value('id');
         $userStatus = UserDetail::where('user_id', $user_id)->value('status');
-
+        $password = $request->password;
+        
         if($userStatus == 'blocked'){
             return redirect()->back()->with('status', 'Użytkownik nieaktywny');
         }

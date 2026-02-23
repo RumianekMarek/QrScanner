@@ -8,6 +8,8 @@ use App\Models\UserDetail;
 use App\Models\UserNote;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 use App\Events\LoginToken;
 use App\Events\QrDataCurl;
@@ -107,12 +109,24 @@ class UserController extends Controller
         return redirect()->back()->with('success', 'Status updated successfully.');
     }
 
-    public function scanner(Request $request)
+    public function scanner(Request $request, $id = '')
     {
         $users = User::with('details')->latest()->get();
-
+        if(!empty($id)){
+            $user = User::with(['details', 'notes'])->findOrFail($id);
+            $scannerData = $user->details->scanner_data ?? '';
+            $userNotes = $user->notes->toArray();
+            $userData = [
+                'notes' => $userNotes,
+                'scannerData' => $scannerData,
+            ];
+        } else {
+            $userData = null;
+        }
         return inertia('Admin/UserScans', [
             'usersList' => $users,
+            'userData' => $userData,
+            'selectedUser' => $id,
         ]);
     }
 
@@ -121,24 +135,44 @@ class UserController extends Controller
         $user = User::with(['details', 'notes'])->findOrFail($id);
         $scannerData = $user->details->scanner_data ?? '';
         $userNotes = $user->notes->toArray();
-        return redirect()->back()->with(
-            'userData', [
+
+        return response()->json([
+            'userData' => [
                 'notes' => $userNotes,
                 'scannerData' => $scannerData,
             ]
-        );
+        ]);
     }
 
-    public function restore($id, $qrCode)
-    {
-        $entry_id = '';
-        $event = null;
+    public function getData($id, $qrCode)
+    {   
         $data =  new \stdClass();
         $domain_meta = substr($qrCode, 0 , 7);
         $qrParts = explode('rnd', strtolower($qrCode));
         $entry_id = str_replace(strtolower($domain_meta), '', $qrParts[0]);
-        
-        if(preg_match('/\d+w\d+/', $entry_id)){
+
+        $event = new CartPolandQrDataCurl($qrCode);
+        $eventData = $event->returner[0] ?? [];
+
+        if(!empty($eventData)){
+            $interArr = [];
+            for($i = 1; $i<10; $i++){
+                $interArr[] = $eventData['zainteresowania' . $i];
+            }
+
+            $inter = array_filter(array_map(function($val) {
+                return trim(preg_replace('/(Inne|\r|\n|<.*?>|,|^Tak$|^Nie$)/', ' ', $val));
+            }, $interArr));
+
+            $data->company = $eventData['company'] ?? $eventData['nip'] ?? '';
+            $data->name = Str::title(($eventData['imie'] ?? '') . '  ' . ($eventData['nazwisko'] ?? ''));
+            $data->email = $eventData['email'] ?? '';
+            $data->phone = $eventData['telefon'] ?? '';
+            $data->adress = $eventData['ulica'] . ' ' . $eventData['numer'] . ' ' . $eventData['miasto'] . ' ' . $eventData['kod_pocztowy'] . ' ' . $eventData['kraj'];
+            $data->interests = preg_replace('/\s+/', ' ', implode(' ', $inter));
+            $data->status = 'true';
+
+        } else if(preg_match('/\d+w\d+/', $entry_id)){
             $event = new NewQrDataCurl($qrCode);
             $eventData = $event->returner->data->person;
 
@@ -146,24 +180,9 @@ class UserController extends Controller
             $data->name = $eventData->fullName ?? '';
             $data->email = $eventData->email ?? '';
             $data->phone = $eventData->phone ?? '';
-            $data->status = ($event->returner->success ?? '') ? 'true' : 'false';
-
-        } else if(preg_match('/^\d+/', $domain_meta)){
-            $event = new CartPolandQrDataCurl($qrCode);
-            $eventData = $event->returner[0] ?? [];
-
-            if(!empty($eventData)){
-                $data->company = $eventData['company'] ?? '';
-                $data->name = ($eventData['imie'] ?? '') . '  ' . ($eventData['nazwisko'] ?? '');
-                $data->email = $eventData['email'] ?? '';
-                $data->phone = $eventData['telefon'] ?? '';
-                $data->status = 'true';
-            } else {
-                $data->status = 'false';
-            }
+            $data->status = ($event->returner->success ?? '') ? 'true' : 'false';            
         } else {
             $domain = Fair::where('qr_details', 'LIKE', '%'. ($domain_meta  . ',') . '%')->pluck('domain');
-            
             if($domain->isNotEmpty() && !empty($qrParts[0]) && !empty($qrParts[1])){
                 
                 $event = new QrDataCurl($domain, $entry_id, $qrCode);
@@ -202,6 +221,16 @@ class UserController extends Controller
 
         $data->qrCode = $qrCode;
 
+        return $data;
+    }
+
+    public function restore($id, $qrCode)
+    {
+        $entry_id = '';
+        $event = null;
+        
+        $data = $this->getData($id, $qrCode);
+        Log::info(json_encode($data));
         $updatedScann = '';
 
         if($data->status != "false"){
@@ -223,15 +252,59 @@ class UserController extends Controller
             $user = User::with(['details', 'notes'])->findOrFail($id);
             $scannerData = $user->details->scanner_data ?? '';
             $userNotes = $user->notes->toArray();
+            
+            return response()->json([
+                    'userData' => [
+                        'notes' => $userNotes,
+                        'scannerData' => $scannerData,
+                    ],
+                    'message' => 'QR code poprawnie odnaleziony'
+                ]);
         }
         
-        return redirect()->back()
-            ->with(
-                'userData', [
-                    'notes' => $userNotes,
-                    'scannerData' => $scannerData,
-                ]
-            )
-            ->with('message', 'QR code poprawnie odnaleziony');
+    }
+
+    public function allRestore($id)
+    {
+        $userDetail = UserDetail::where('user_id', $id)->first();
+
+        if (!$userDetail || empty($userDetail->scanner_data)) return;
+
+        \Log::channel('scanner_backup')->info("START DATA: " . $id);
+        \Log::channel('scanner_backup')->info("RAW DATA: " . $userDetail->scanner_data);
+
+        $dataArray = explode(';;', $userDetail->scanner_data);
+        $newData = [];
+
+        foreach($dataArray as $single) {
+            try{
+                $sData = json_decode(trim($single), true);
+                $newD = $this->getData($id, $sData['qrCode']);
+                $newData[] = json_encode($newD, JSON_UNESCAPED_UNICODE);
+            } catch(\Throwable $e) {
+                $newData[] = $single;
+                \Log::error("Błąd przy All Restore: " . $e->getMessage());
+            }
+        }
+
+        if (!empty($newData)) {
+            \Log::channel('scanner_backup')->info("FINAL DATA: " . implode(';; ', $newData));
+            \Log::channel('scanner_backup')->info("END Update User: " . $id . "\n" . str_repeat('=', 40));
+
+            $userDetail->update(['scanner_data' => implode(';; ', $newData)]);
+
+            $user = User::with(['details', 'notes'])->findOrFail($id);
+            $scannerData = $user->details->scanner_data ?? '';
+            $userNotes = $user->notes->toArray();
+
+            return response()->json([
+                    'userData' => [
+                        'notes' => $userNotes,
+                        'scannerData' => $scannerData,
+                    ],
+                    'message' => 'QR code poprawnie odnaleziony'
+                ]);
+        }
+
     }
 }

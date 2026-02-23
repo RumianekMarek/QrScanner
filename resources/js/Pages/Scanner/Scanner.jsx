@@ -37,7 +37,6 @@ export default function Scanner({ mode, userNotes }) {
         setShowNote(false);
     };
 
-    console.log(props);
     const htmlLast3 = (
         <>
             <h3 className="text-2xl font-bold">Ostatnie Skanowania</h3>
@@ -47,7 +46,7 @@ export default function Scanner({ mode, userNotes }) {
                 if(value.length < 5){
                     return;
                 }
-                console.log(value);
+                
                 const entry = JSON.parse(value);
                 const noteObj = userNotes.find(n => n.qr_code === (entry['qrCode'] ?? ''));
                 
@@ -153,8 +152,7 @@ export default function Scanner({ mode, userNotes }) {
             }
         });
     };
-    console.log(mode);
-    console.log(skanmode);
+
     return (
         <>
            <form onSubmit={submiter} className="qr-form h-0 opacity-0">

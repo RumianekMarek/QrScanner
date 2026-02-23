@@ -65,7 +65,29 @@ class ScannerController extends Controller
         $qrParts = explode('rnd', $qrCode);
         $entry_id = str_replace($domain_meta, '', $qrParts[0]);
 
-        if(preg_match('/\d+w\d+/', $entry_id)){
+        $event = new CartPolandQrDataCurl($qrCode);
+        $eventData = $event->returner[0] ?? [];
+
+        if(!empty($eventData)){
+
+            $interArr = [];
+            for($i = 1; $i<10; $i++){
+                $interArr[] = $eventData['zainteresowania' . $i];
+            }
+
+            $inter = array_filter(array_map(function($val) {
+                return trim(preg_replace('/(Inne|\r|\n|<.*?>|,|^Tak$|^Nie$)/', ' ', $val));
+            }, $interArr));
+
+            $data->company = $eventData['company'] ?? $eventData['nip'] ?? '';
+            $data->name = Str::title(($eventData['imie'] ?? '') . '  ' . ($eventData['nazwisko'] ?? ''));
+            $data->email = $eventData['email'] ?? '';
+            $data->phone = $eventData['telefon'] ?? '';
+            $data->adress = $eventData['ulica'] . ' ' . $eventData['numer'] . ' ' . $eventData['miasto'] . ' ' . $eventData['kod_pocztowy'] . ' ' . $eventData['kraj'];
+            $data->interests = preg_replace('/\s+/', ' ', implode(' ', $inter));
+            $data->status = 'true';
+            
+        } else if(preg_match('/\d+w\d+/', $entry_id)){
 
             $event = new NewQrDataCurl($qrCode);
             $eventData = $event->returner->data->person;
@@ -75,19 +97,6 @@ class ScannerController extends Controller
             $data->email = $eventData->email ?? '';
             $data->phone = $eventData->phone ?? '';
             $data->status = ($event->returner->success ?? '') ? 'true' : 'false';
-        } else if(preg_match('/^\d+/', $domain_meta)){
-            $event = new CartPolandQrDataCurl($qrCode);
-            $eventData = $event->returner[0] ?? [];
-
-            if(!empty($eventData)){
-                $data->company = $eventData['company'] ?? '';
-                $data->name = ($eventData['imie'] ?? '') . '  ' . ($eventData['nazwisko'] ?? '');
-                $data->email = $eventData['email'] ?? '';
-                $data->phone = $eventData['telefon'] ?? '';
-                $data->status = 'true';
-            } else {
-                $data->status = 'false';
-            }
         } else {
             $domain = Fair::where('qr_details', 'LIKE', '%'. ($domain_meta  . ',') . '%')->pluck('domain');
     
@@ -149,7 +158,7 @@ class ScannerController extends Controller
         $notesColl = $notes->map->only(['qr_code', 'note']);
 
         $data_array = explode(';;', $data);
-        $csv_data = "id,Email,Telefon,Imie i Nazwisko, Firma, ScanedCode, Notatka \n";
+        $csv_data = "id,Email,Telefon,Imie i Nazwisko, Adres, Firma/NIP, Zainteresowania, Notatki, ScanedCode \n";
 
         foreach($data_array as $index => $single){
             if(trim($single) == ""){ continue; }
@@ -162,9 +171,11 @@ class ScannerController extends Controller
             $csv_data .= ',' . ($single->email ?? ' ');
             $csv_data .= ',' . ($single->phone ?? ' ');
             $csv_data .= ',' . ($single->name ?? ' ');
+            $csv_data .= ',' . ($single->adress ?? ' ');
             $csv_data .= ',' . ($single->company ?? ' ');
-            $csv_data .= ',' . ($single->qrCode ?? ' ');
+            $csv_data .= ',' . ($single->interests ?? ' ');
             $csv_data .= ',' . ($singleNote['note'] ?? ' ');
+            $csv_data .= ',' . ($single->qrCode ?? ' ');
             $csv_data .= "\n";
         }
 
@@ -178,7 +189,7 @@ class ScannerController extends Controller
 
         Mail::send([], [], function ($message) use ($csvData, $userEmail) {
             $message->to($userEmail)
-                ->subject('Your CSV File') // Temat wiadomości
+                ->subject('Your CSV File')
                 ->html('<p>Hello,</p><p>Please find the attached CSV file.</p>')
                 ->attachData($csvData, 'data.csv', [
                     'mime' => 'text/csv',

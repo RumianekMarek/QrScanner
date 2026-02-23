@@ -13,6 +13,7 @@ export default function Login({ status, canResetPassword }) {
         password: '',
         remember: false,
         targetUrl: '',
+        logout_others: false,
     });
 
     const [showflash, setShowflash] = useState(false);
