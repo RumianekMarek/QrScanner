@@ -115,6 +115,10 @@ export default function DeviceScannerAcces({  scannerData, userNotes, user }) {
         >
             <Head title="Qr Skaner" />
 
+            {currentPageDataArray <= 0 && (
+                <p class="text-center text-xl">Skaner jest aktywny w czasie trwania targów</p>
+            )}
+
             <div className="float-right me-5">
                 <PrimaryButton
                     onClick={() => createCsv(user.id)}
@@ -125,6 +129,7 @@ export default function DeviceScannerAcces({  scannerData, userNotes, user }) {
                     Pobierz
                 </PrimaryButton>
             </div>
+            
             <div className="sm:m-5">
                 <table className="table-fixed border-collapse border mt-4 w-full sm:w-full">
                     <thead>
