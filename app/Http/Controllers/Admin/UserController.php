@@ -146,6 +146,7 @@ class UserController extends Controller
 
     public function getData($id, $qrCode)
     {   
+        Log::info(json_encode($qrCode));
         $data =  new \stdClass();
         $domain_meta = substr($qrCode, 0 , 7);
         $qrParts = explode('rnd', strtolower($qrCode));
@@ -218,7 +219,7 @@ class UserController extends Controller
                     ->with('message', 'Qr Code Prefix nie został odnaleziony, sprawdź czy targi zostały dodane');
             }
         }
-
+        Log::info(json_encode($data));
         $data->qrCode = $qrCode;
 
         return $data;
@@ -230,9 +231,9 @@ class UserController extends Controller
         $event = null;
         
         $data = $this->getData($id, $qrCode);
-        Log::info(json_encode($data));
-        $updatedScann = '';
+        if(empty($data->email)) $data = '{"status":"false","qrCode":"' . $qrCode . '"}';
 
+        $updatedScann = '';
         if($data->status != "false"){
             $event_data = json_encode($data);
             $oldScann = UserDetail::where('user_id', $id)->value('scanner_data');
@@ -280,6 +281,9 @@ class UserController extends Controller
             try{
                 $sData = json_decode(trim($single), true);
                 $newD = $this->getData($id, $sData['qrCode']);
+
+                if(empty($newD->email)) $newD = '{"status":"false","qrCode":"' . $qrCode . '"}';
+
                 $newData[] = json_encode($newD, JSON_UNESCAPED_UNICODE);
             } catch(\Throwable $e) {
                 $newData[] = $single;
