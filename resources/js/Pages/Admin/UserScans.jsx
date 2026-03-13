@@ -131,8 +131,10 @@ export default function UserScans({ usersList }) {
 
     const restoreAction = (id, qrCode) => {
         setLoadingState(prev => ({...prev, [qrCode]: true}));
-        axios.post(route('admin.users.restore', {id: id, qrCode: qrCode}))
+        axios.post(route('admin.users.restore', {id: id}), {
+            qrCode: qrCode})
             .then(res => {
+                console.log(res);
                 setUserData(res.data.userData);
             })
             .finally(() => {

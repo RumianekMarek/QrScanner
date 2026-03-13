@@ -42,6 +42,36 @@ class CartPolandQrDataCurl
         $response = Http::withBasicAuth('s.skrypnychenko', 'Saltarello2025!')
             ->post('https://ptak185.ticketpoland.pl/import/api/api2/json.php', $payload);
 
+        if(empty($response->json()['email'])){
+
+            $payload = [
+                "tabela"=> "kody_log_view",
+                "kolumny"=> ["kod_norma"],
+                "filtry"=> [
+                    ["kod", $qrCode],
+                ],
+                "limit"=> 1
+            ];
+
+            $response = Http::withBasicAuth('s.skrypnychenko', 'Saltarello2025!')
+                ->post('https://ptak185.ticketpoland.pl/import/api/api2/json.php', $payload);
+
+            $qrCode = $response->json()[0]['kod_norma'];
+
+            $payload = [
+                "tabela"=> "rejestracja5",
+                "kolumny"=> ["kod", "email", "telefon", "imie", "nazwisko", "ulica", "numer", "kod_pocztowy", "miasto", "kraj", "nip", "zainteresowania1", "zainteresowania2", "zainteresowania3", "zainteresowania4", "zainteresowania5", "zainteresowania6", "zainteresowania7", "zainteresowania8", "zainteresowania9"
+                ],
+                "filtry"=> [
+                    ["kod", $qrCode],
+                ],
+                "limit"=> 1
+            ];
+            
+            $response = Http::withBasicAuth('s.skrypnychenko', 'Saltarello2025!')
+                ->post('https://ptak185.ticketpoland.pl/import/api/api2/json.php', $payload);
+        }
+        
         if ($response->successful()) {
             $wynik = $response->json();
         } else {

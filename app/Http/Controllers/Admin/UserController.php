@@ -165,6 +165,7 @@ class UserController extends Controller
                 return trim(preg_replace('/(Inne|\r|\n|<.*?>|,|^Tak$|^Nie$)/', ' ', $val));
             }, $interArr));
 
+            $data->qrCode = $eventData['kod'] ?? $qrCode;
             $data->company = $eventData['company'] ?? $eventData['nip'] ?? '';
             $data->name = Str::title(($eventData['imie'] ?? '') . '  ' . ($eventData['nazwisko'] ?? ''));
             $data->email = $eventData['email'] ?? '';
@@ -220,22 +221,25 @@ class UserController extends Controller
             }
         }
         Log::info(json_encode($data));
-        $data->qrCode = $qrCode;
+        if(empty($data->qrCode)){
+            $data->qrCode = $qrCode;
+        }
 
         return $data;
     }
 
-    public function restore($id, $qrCode)
+    public function restore(Request $request, $id)
     {
         $entry_id = '';
         $event = null;
-        
+        $qrCode = $request->qrCode;
+
         $data = $this->getData($id, $qrCode);
         if(empty($data->email)) $data = '{"status":"false","qrCode":"' . $qrCode . '"}';
 
         $updatedScann = '';
         if($data->status != "false"){
-            $event_data = json_encode($data);
+            $event_data = json_encode($data, JSON_UNESCAPED_SLASHES);
             $oldScann = UserDetail::where('user_id', $id)->value('scanner_data');
 
             $updatedScann = preg_replace_callback(
@@ -259,7 +263,12 @@ class UserController extends Controller
                         'notes' => $userNotes,
                         'scannerData' => $scannerData,
                     ],
-                    'message' => 'QR code poprawnie odnaleziony'
+                    'message' => 'QR code poprawnie odnaleziony',
+                    'data' => $data,
+                    '$event_data' => $event_data,
+                    'updatedScann' => $updatedScann,
+                    '$oldScann' => $oldScann,
+                    '$qrCode' => $qrCode,
                 ]);
         }
         

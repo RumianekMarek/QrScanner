@@ -58,7 +58,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users/scanner/{id?}', [UserController::class, 'scanner'])->name('users.scanner');
     Route::post('/users/scanner', [UserController::class, 'checker'])->name('users.checker');
     Route::post('/users/scanner/{id?}', [UserController::class, 'list'])->name('users.list');
-    Route::post('/users/scanner/restore/{id}/{qrCode}', [UserController::class, 'restore'])->name('users.restore');
+    Route::post('/users/scanner/restore/{id}', [UserController::class, 'restore'])->name('users.restore');
     Route::post('/users/scanner/all-restore/{id}', [UserController::class, 'allRestore'])->name('users.allrestore');
     
     Route::get('/fairs', [FairController::class, 'index'])->name('fairs.index');
