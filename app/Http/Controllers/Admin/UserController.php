@@ -155,7 +155,7 @@ class UserController extends Controller
         $event = new CartPolandQrDataCurl($qrCode);
         $eventData = $event->returner[0] ?? [];
 
-        if(!empty($eventData)){
+        if(!empty($event) && !empty($eventData)){
             $interArr = [];
             for($i = 1; $i<10; $i++){
                 $interArr[] = $eventData['zainteresowania' . $i];
@@ -264,11 +264,6 @@ class UserController extends Controller
                         'scannerData' => $scannerData,
                     ],
                     'message' => 'QR code poprawnie odnaleziony',
-                    'data' => $data,
-                    '$event_data' => $event_data,
-                    'updatedScann' => $updatedScann,
-                    '$oldScann' => $oldScann,
-                    '$qrCode' => $qrCode,
                 ]);
         }
         

@@ -68,8 +68,7 @@ class ScannerController extends Controller
         $event = new CartPolandQrDataCurl($qrCode);
         $eventData = $event->returner[0] ?? [];
 
-        if(!empty($eventData)){
-
+        if(!empty($event) && !empty($eventData)){
             $interArr = [];
             for($i = 1; $i<10; $i++){
                 $interArr[] = $eventData['zainteresowania' . $i];
@@ -103,8 +102,8 @@ class ScannerController extends Controller
             if($domain->isNotEmpty() && !empty($qrParts[0]) && !empty($qrParts[1])){
                 
                 $event = new QrDataCurl($domain, $entry_id, $qrCode);
+
                 event($event);
-    
                 if($event->returner === null){
                     foreach($domain as $index => $val){
                         $domain[$index]->domain = 'old.' . $val->domain;
@@ -129,6 +128,7 @@ class ScannerController extends Controller
         $updatedScann = '';
 
         $eventData = json_encode($data) . ';; ';
+
         $userDetail = UserDetail::where('user_id', $id)->first();
 
         if($userDetail){

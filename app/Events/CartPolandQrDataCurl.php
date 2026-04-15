@@ -43,7 +43,6 @@ class CartPolandQrDataCurl
             ->post('https://ptak185.ticketpoland.pl/import/api/api2/json.php', $payload);
 
         if(empty($response->json()['email'])){
-
             $payload = [
                 "tabela"=> "kody_log_view",
                 "kolumny"=> ["kod_norma"],
@@ -56,11 +55,17 @@ class CartPolandQrDataCurl
             $response = Http::withBasicAuth('s.skrypnychenko', 'Saltarello2025!')
                 ->post('https://ptak185.ticketpoland.pl/import/api/api2/json.php', $payload);
 
-            $qrCode = $response->json()[0]['kod_norma'];
+            $res = $response->json();
+
+            if(empty($res[0]['kod_norm'])){
+                return false;
+            }
+
+            $qrCode = $res[0]['kod_norm'];
 
             $payload = [
                 "tabela"=> "rejestracja5",
-                "kolumny"=> ["kod", "email", "telefon", "imie", "nazwisko", "ulica", "numer", "kod_pocztowy", "miasto", "kraj", "nip", "zainteresowania1", "zainteresowania2", "zainteresowania3", "zainteresowania4", "zainteresowania5", "zainteresowania6", "zainteresowania7", "zainteresowania8", "zainteresowania9"
+                "kolumny"=> ["email", "telefon", "imie", "nazwisko", "ulica", "numer", "kod_pocztowy", "miasto", "kraj", "nip", "zainteresowania1", "zainteresowania2", "zainteresowania3", "zainteresowania4", "zainteresowania5", "zainteresowania6", "zainteresowania7", "zainteresowania8", "zainteresowania9"
                 ],
                 "filtry"=> [
                     ["kod", $qrCode],
@@ -71,11 +76,11 @@ class CartPolandQrDataCurl
             $response = Http::withBasicAuth('s.skrypnychenko', 'Saltarello2025!')
                 ->post('https://ptak185.ticketpoland.pl/import/api/api2/json.php', $payload);
         }
-        
-        if ($response->successful()) {
+
+        if (!empty($response->json()['email'])) {
             $wynik = $response->json();
         } else {
-            return "Błąd: " . $response;
+            return false;
         }
 
         return $wynik;
